@@ -178,27 +178,28 @@ video {
 .product-details-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .details-container{
-  padding: 8px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .button-wrapper{
-  padding: 8px;
+  padding: 12px;
   margin: 0 -8px;
   position: relative;
 }
 .button-wrapper button {
   color: #8ac2ff;
   display: flex;
-  font-size: 1.06em;
+  font-size: 1em;
   align-items: center;
-  padding: 0 15px;
+  padding: 0 10px;
+  font-weight: 100;
 }
 
 #add{
@@ -217,15 +218,15 @@ video {
   margin-top: -6px;
   position: absolute;
 
-  transform: rotate(45deg);
+  transform: rotate(60deg);
   left: 4%;
   top: 50%;
   width: 0;
 }
 
 .button-wrapper button:after {
-  margin-top: -1px;
-  transform: rotate(135deg);
+  margin-top: -2px;
+  transform: rotate(125deg);
 }
 
 #add {
