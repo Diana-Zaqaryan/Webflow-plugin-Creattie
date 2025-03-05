@@ -312,7 +312,7 @@ function populateStylesDropdown(stylesData) {
     allOption.setAttribute('data-value', '');
     allOption.setAttribute('selected', 'selected');
     allOption.innerHTML = `
-    <img src="../../assets/ALL.svg" alt="all styles" />
+    <img src="assets/ALL.svg" alt="all styles" />
     <span>All Styles</span>
   `;
     optionsContainer.appendChild(allOption);
