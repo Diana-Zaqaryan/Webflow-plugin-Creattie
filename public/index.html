@@ -13,34 +13,58 @@
 </head>
 
 <body>
+<div id="loading-indicator-for-requests">
+  <div class="load">
+    <figure class="loader">
+      <div class="dot white"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </figure>
+  </div>
+</div>
 
-<header>
-  <div class="header-wrapper">
-    <div class="logo-profile">
-      <h1 class="logo">
-        Creattie
-      </h1>
-      <div class="divider">
-        |
+<div class="page-content" id="page">
+  <header>
+    <div class="header-wrapper">
+      <div class="logo-profile">
+        <h1 class="logo">
+          Creattie
+        </h1>
+        <div class="divider">
+          |
+        </div>
+
+<!--        <select id="selection" onchange="handleSelectionChange()">-->
+<!--          <option value="">Select an option</option>-->
+<!--          <option value="login" id="login-option">Log in / Sign up</option>-->
+<!--          <option value="profile">Profile</option>-->
+<!--          <option value="favorite">Favorites</option>-->
+<!--          <option value="help">Help</option>-->
+<!--          <option value="sign-out">Sign out</option>-->
+<!--        </select>-->
+
+        <div class="dropdown">
+          <div class="dropbtn">
+            <img src="./assets/prof.png" alt="profile image" id="no-auth-profile">
+            <div class="profile" id="auth-profile"></div>
+          </div>
+          <div class="dropdown-content">
+            <a href="#" id="login">Log in / Sign up</a>
+            <a href="#">Profile</a>
+            <a href="#">Favorites</a>
+            <a href="#">Help</a>
+            <a href="#" id="logout">Sign out</a>
+          </div>
+        </div>
       </div>
 
-      <select id="selection" onchange="handleSelectionChange()">
-        <option value="">Select an option</option>
-        <option value="login" data-link="https://creattie.com/lottie-animated-illustrations/all?type=all&orderBy=order&page=1#">Log in / Sign up</option>
-        <option value="profile">Profile</option>
-        <option value="favorite">Favorites</option>
-        <option value="help">Help</option>
-        <option value="sign-out">Sign out</option>
-      </select>
 
     </div>
-    <div >
-      <img src="./assets/prof.png" style="width: 1.3em">
-    </div>
-  </div>
-</header>
+  </header>
 
-<main>
+  <main>
 
     <div class="details-container" id="details">
       <div class="button-wrapper">
@@ -52,57 +76,59 @@
       <button id="add" onclick="addAsset()">Add asset</button>
     </div>
 
-  <div class="main-wrapper" id="products">
-    <div class="filter-wrapper">
-      <div class="filters">
-        <select id="assets" name="assets"  onchange="handleSelectionChangeInMain()">
-          <option value="all" style="'font-family: Carter One, system-ui;'">All assets</option>
-          <option value="animated" selected style="'font-family: Carter One, system-ui;'">Animated illustrations</option>
-          <option value="illustrations" style="'font-family: Carter One, system-ui;'">Illustrations</option>
-          <option value="animated icons" style="'font-family: Carter One, system-ui;'">Animated Icons</option>
-          <option value="icons" style="'font-family: Carter One, system-ui;'">Icons</option>
-        </select>
+    <div class="main-wrapper" id="products">
+      <div class="filter-wrapper">
+        <div class="filters">
+          <select id="assets" name="assets"  onchange="handleSelectionChangeInMain()">
+            <option value="all" style="'font-family: Carter One, system-ui;'">All assets</option>
+            <option value="animated" selected style="'font-family: Carter One, system-ui;'">Animated illustrations</option>
+            <option value="illustrations" style="'font-family: Carter One, system-ui;'">Illustrations</option>
+            <option value="animated icons" style="'font-family: Carter One, system-ui;'">Animated Icons</option>
+            <option value="icons" style="'font-family: Carter One, system-ui;'">Icons</option>
+          </select>
 
-        <div class="custom-select" id="styles-dropdown">
-          <div class="select-box" id="select-box">
-            <img class="selected-img" alt="Selected Style" id="select-img"/>
-            <span class="selected-text">Select Style</span>
-            <i class="material-icons arrow" style="font-size: 15px">keyboard_arrow_down</i>
+          <div class="custom-select" id="styles-dropdown">
+            <div class="select-box" id="select-box">
+              <img class="selected-img" alt="Selected Style" id="select-img"/>
+              <span class="selected-text">Select Style</span>
+              <i class="material-icons arrow" style="font-size: 15px">keyboard_arrow_down</i>
+            </div>
+            <div class="options-container" id="styles-options-container">
+            </div>
           </div>
-          <div class="options-container" id="styles-options-container">
-          </div>
+        </div>
+
+        <div class="search-wrapper">
+          <input type="search" id="search" placeholder="Search assets">
         </div>
       </div>
 
-      <div class="search-wrapper">
-        <input type="search" id="search" placeholder="Search assets">
+      <div id="loading-indicator">
+        <div class="load" >
+          <figure class="loader" style="left: 42%">
+            <div class="dot white"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </figure>
+        </div>
       </div>
-    </div>
-    <div id="loading-indicator">
-      <div class="load">
-        <figure class="loader">
-          <div class="dot white"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </figure>
+      <div class="cards-wrapper">
+        <div class="cards-content">
+          <div id="data-container"></div>
+        </div>
+      </div>
+
+      <div class="buttons-wrapper">
+        <button>Previous</button>
+        <button>Next</button>
       </div>
     </div>
 
-    <div class="cards-wrapper">
-      <div class="cards-content">
-        <div id="data-container"></div>
-      </div>
-    </div>
+  </main>
+</div>
 
-    <div class="buttons-wrapper">
-      <button>Previous</button>
-      <button>Next</button>
-    </div>
-  </div>
-
-</main>
 
 
 <script src="index.js" defer></script>

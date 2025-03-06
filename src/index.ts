@@ -32,14 +32,28 @@ let selectedCategory = 'animated';
 let searchText= '';
 const productDetails: any = document.getElementById('details');
 const products = document.getElementById('products');
+const loading: any = document.getElementById('loading-indicator-for-requests');
+const page = document.getElementById('page');
+const notAuthProfile  = document.getElementById('no-auth-profile');
+const authProfile = document.getElementById('auth-profile')
+
+
 document.addEventListener("DOMContentLoaded", function() {
   const assetsDropdown: any = document.getElementById('assets');
+  loading.style.display= 'none'
   productDetails.style.display = 'none';
+  page.style.display = 'block';
   products.style.display = 'block'
   assetsDropdown.value = 'animated';
   fetchByCategory('animated', style, '');
   document.getElementById('select-img').style.display = 'none';
-
+  let token = localStorage.getItem('token');
+  if (!token) {
+    token = naiveId();
+    localStorage.setItem('token', token);
+    setDisplays(false)
+  }
+  makeApiCalls(token, 3)
 });
 
 
@@ -77,19 +91,113 @@ document.getElementById('search').addEventListener('input', function(event:any) 
   searchText = searchQuery
 });
 
+document.getElementById('login').addEventListener('click', () =>{
+    const token = localStorage.getItem('token')
+    const url = `https://creattie.com/?webflow-token=${token}`
+    window.open(url, '_blank');
+    makeApiCalls(token, 20);
+})
+
+document.getElementById('logout').addEventListener('click', () =>{
+  localStorage.removeItem('token');
+  makeApiCalls(localStorage.getItem('token'), 1)
+  setDisplays(false)
+})
+
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function setDisplays (isAuth: boolean) {
+  if (isAuth) {
+    notAuthProfile.style.display = 'none';
+    authProfile.style.display = 'block';
+    document.getElementById('login').style.display = 'none';
+    document.getElementById('logout').style.display = 'block'
+    return
+  }
+  notAuthProfile.style.display = 'block';
+  authProfile.style.display = 'none';
+  document.getElementById('login').style.display = 'block'
+  document.getElementById('logout').style.display = 'none'
+}
+
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF';
+  let color = '#';
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+
+async function makeApiCalls(token: string, retries: number) {
+  loading.style.display= 'block';
+  page.style.display = 'none'
+  let attempt = 0;
+  const url = 'https://creattie.com/api/get-user';
+
+  while (attempt < retries) {
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 401) {
+        console.log(`Attempt ${attempt + 1}: Unauthorized. Retrying...`);
+        attempt++;
+
+        if (attempt < retries) {
+          await delay(2000);
+        }
+        setDisplays(false)
+      } else {
+        const data = await response.json();
+        loading.style.display= 'none';
+        page.style.display = 'block';
+        setDisplays(true)
+        authProfile.style.backgroundColor = getRandomColor()
+        authProfile.innerHTML = data.data.name.slice(0,1)
+        console.log('Data received:', data);
+        localStorage.setItem('token', token);
+        console.log('Data received:', data);
+        return;
+      }
+    } catch (error) {
+      console.error('Error making API call:', error);
+      return;
+    }
+  }
+  page.style.display = 'block'
+  loading.style.display = 'none'
+  console.error('Error: 401 Unauthorized - Max retries reached.');
+}
+
 
 function resetSearchValue () {
   const search: any = document.getElementById('search')
   search.value =''
 }
 
-function handleSelectionChange() {
-  const select: any = document.getElementById('selection');
-  const selectedOption = select.options[select.selectedIndex];
-  const link = selectedOption.getAttribute('data-link');
-  if (link) {
-    window.open(link, '_blank');
-  }
+// function handleSelectionChange() {
+//   const select: any = document.getElementById('selection');
+//   const selectedValue = select.value;
+//   if (selectedValue === 'login') {
+//     const token = localStorage.getItem('token')
+//     const url = `https://creattie.com/?webflow-token=${token}`
+//     window.open(url, '_blank');
+//     makeApiCalls(token)
+//   }
+// }
+
+function naiveId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
 function handleSelectionChangeInMain() {

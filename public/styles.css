@@ -249,9 +249,9 @@ video {
   position: relative;
   top: 30%;
   bottom: 0;
-  left: 42%;
+  /*left: 42%;*/
   right: 0;
-  transform: translate(-70%, -50%);
+  /*transform: translate(-70%, -50%);*/
   width: 3em;
   height: 3em;
   animation: rotate5123 2.4s linear infinite;
@@ -406,23 +406,25 @@ video {
 .option {
   display: flex;
   align-items: center;
-  padding: 8px;
+  padding: 3px;
   cursor: pointer;
   font-size: 14px;
+  border-radius: 5px;
+  margin: 0 4px;
 }
 
 /* Style the images inside the options */
 .option img {
   margin-right: 10px;
-  width: 35px;
-  height: 35px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
   background: #ffffff;
 }
 
 /* Hover effect for options */
 .option:hover {
-  background-color: #525252;
+  background-color: #1667d2;
 }
 
 /* Show options when the select box is clicked */
@@ -434,3 +436,60 @@ video {
   transform: rotate(180deg);
 }
 
+
+
+
+/* drop down menu*/
+
+.dropbtn {
+  background-color: transparent;
+  color: white;
+  font-size: 16px;
+  border: none;
+  display: flex;
+  align-items: center;
+  width: 1.2em;
+}
+
+.dropbtn img {
+  width: 100%;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #363636;
+  min-width: 100px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  /*right: -30%;*/
+  border: 1px solid #444444;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 4px;
+}
+
+.dropdown-content a {
+  color: #ffffff;
+  padding: 4px;
+  text-decoration: none;
+  display: block;
+  border-radius: 4px;
+}
+
+.dropdown-content a:hover {  background-color: #1667d2;}
+
+.dropdown:hover .dropdown-content {display: block;}
+
+
+#auth-profile {
+  display: block;
+  padding: 4px 8px;
+  border: 1px solid #444;
+  border-radius: 50%;
+}
