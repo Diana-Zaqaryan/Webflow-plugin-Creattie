@@ -36,12 +36,14 @@ const loading: any = document.getElementById('loading-indicator-for-requests');
 const page = document.getElementById('page');
 const notAuthProfile  = document.getElementById('no-auth-profile');
 const authProfile = document.getElementById('auth-profile')
-
+const notFound = document.getElementById('not-found')
 
 document.addEventListener("DOMContentLoaded", function() {
   const assetsDropdown: any = document.getElementById('assets');
   loading.style.display= 'none'
   productDetails.style.display = 'none';
+  notFound.style.display = 'none'
+  setNotFoundDisplays(true)
   page.style.display = 'block';
   products.style.display = 'block'
   assetsDropdown.value = 'animated';
@@ -114,13 +116,23 @@ function setDisplays (isAuth: boolean) {
     notAuthProfile.style.display = 'none';
     authProfile.style.display = 'block';
     document.getElementById('login').style.display = 'none';
-    document.getElementById('logout').style.display = 'block'
+    document.getElementById('info').style.display = 'block'
     return
   }
   notAuthProfile.style.display = 'block';
   authProfile.style.display = 'none';
   document.getElementById('login').style.display = 'block'
-  document.getElementById('logout').style.display = 'none'
+  document.getElementById('info').style.display = 'none'
+}
+
+function setNotFoundDisplays (isFound :boolean) {
+  if (isFound) {
+    notFound.style.display = 'none';
+    document.getElementById('navigation-buttons').style.display = 'flex'
+    return
+  }
+  notFound.style.display = 'block';
+  document.getElementById('navigation-buttons').style.display = 'none'
 }
 
 
@@ -268,6 +280,7 @@ function fetchAnimatedIllustrations(url: string) {
         }
         return product
       });
+      !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
       document.getElementById('loading-indicator').style.display = 'none';
     }
     catch (error) {
@@ -321,6 +334,7 @@ function fetchData(url: string) {
         dataContainer.appendChild(productDiv);
         document.getElementById('loading-indicator').style.display = 'none';
       });
+      !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
     }
     catch (error) {
       console.error('Error fetching data: ', error);
@@ -517,4 +531,8 @@ function fetchStyles(category) {
   });
 }
 
+
+function openFavoritsPage() {
+  window.location.href = 'favorites.html';
+}
 
