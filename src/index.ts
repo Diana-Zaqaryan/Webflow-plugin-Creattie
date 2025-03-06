@@ -47,13 +47,12 @@ document.addEventListener("DOMContentLoaded", function() {
   assetsDropdown.value = 'animated';
   fetchByCategory('animated', style, '');
   document.getElementById('select-img').style.display = 'none';
-  let token = localStorage.getItem('token');
-  if (!token) {
-    token = naiveId();
-    localStorage.setItem('token', token);
-    setDisplays(false)
+  const token = localStorage.getItem('token');
+  setDisplays(false);
+  if (token) {
+    void makeApiCalls(token, 1);
+    setDisplays(true)
   }
-  makeApiCalls(token, 3)
 });
 
 
@@ -92,15 +91,17 @@ document.getElementById('search').addEventListener('input', function(event:any) 
 });
 
 document.getElementById('login').addEventListener('click', () =>{
-    const token = localStorage.getItem('token')
-    const url = `https://creattie.com/?webflow-token=${token}`
+    const newToke = naiveId();
+    localStorage.setItem('token', newToke)
+    const url = `https://creattie.com/?webflow-token=${newToke}`
     window.open(url, '_blank');
-    makeApiCalls(token, 20);
+    void makeApiCalls(newToke, 20).then(r => {return r});
 })
 
 document.getElementById('logout').addEventListener('click', () =>{
   localStorage.removeItem('token');
-  makeApiCalls(localStorage.getItem('token'), 1)
+  localStorage.removeItem('user')
+  void makeApiCalls(localStorage.getItem('token'), 1)
   setDisplays(false)
 })
 
@@ -152,9 +153,8 @@ async function makeApiCalls(token: string, retries: number) {
       if (response.status === 401) {
         console.log(`Attempt ${attempt + 1}: Unauthorized. Retrying...`);
         attempt++;
-
         if (attempt < retries) {
-          await delay(2000);
+          await delay(1000);
         }
         setDisplays(false)
       } else {
@@ -162,8 +162,7 @@ async function makeApiCalls(token: string, retries: number) {
         loading.style.display= 'none';
         page.style.display = 'block';
         setDisplays(true)
-        authProfile.style.backgroundColor = getRandomColor()
-        authProfile.innerHTML = data.data.name.slice(0,1)
+        setProfileStyles(data.data);
         console.log('Data received:', data);
         localStorage.setItem('token', token);
         console.log('Data received:', data);
@@ -179,6 +178,10 @@ async function makeApiCalls(token: string, retries: number) {
   console.error('Error: 401 Unauthorized - Max retries reached.');
 }
 
+function setProfileStyles(user) {
+  authProfile.style.backgroundColor = getRandomColor()
+  authProfile.innerHTML = user.name.slice(0,1)
+}
 
 function resetSearchValue () {
   const search: any = document.getElementById('search')
