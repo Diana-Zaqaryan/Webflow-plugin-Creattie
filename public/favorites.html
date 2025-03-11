@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Change Animation Colors</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
   <style>
     .color-picker-container {
       display: flex;
@@ -11,20 +12,83 @@
       gap: 10px;
     }
 
-    .color-picker-item label {
-      margin-top: 5px;
-    }
-
     #color-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
+      justify-content: center;
     }
+
+    #primary_color{
+      border-radius: 50%;
+      height: 30px;
+      width: 30px;
+      border: none;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    #primary_color::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    #primary_color::-webkit-color-swatch {
+      border: none;
+      border-radius: 50%;
+    }
+
+    .button-wrapper{
+        padding: 12px;
+        margin: 0 -8px;
+        position: relative;
+    }
+    .button-wrapper button {
+        color: #8ac2ff;
+        display: flex;
+        font-size: 1em;
+        align-items: center;
+        padding: 0 10px;
+        font-weight: 100;
+        background: transparent;
+        border: none;
+    }
+
+    #add{
+        margin: 8px 0;
+    }
+
+    .button-wrapper button:hover {
+        color: #4688cf;
+    }
+
+    .button-wrapper button:after ,.button-wrapper button:before{
+        border-right: 2px solid;
+        content: '';
+        display: block;
+        height: 8px;
+        margin-top: -6px;
+        position: absolute;
+
+        transform: rotate(60deg);
+        left: 4%;
+        top: 50%;
+        width: 0;
+    }
+
+    .button-wrapper button:after {
+        margin-top: -2px;
+        transform: rotate(125deg);
+    }
+
+
   </style>
 </head>
+
 <body>
 
-<h6 style="color: #ffffff">Change Animation Colors</h6>
+<div class="button-wrapper">
+    <button onclick=" window.history.back()">Back</button>
+</div>
+<h6 style="color: #ffffff; display: flex; width: 100%; justify-content: center">Change Animation Colors</h6>
 
 <div class="filters">
   <div class="color-picker-container" id="color-picker-container"></div>
@@ -126,7 +190,7 @@
     const colorPickerItem = document.createElement("div");
     colorPickerItem.classList.add("color-picker-item");
     const colorInput = document.createElement("input");
-    colorInput.setAttribute('id', 'colorInput')
+    colorInput.setAttribute('id', 'primary_color')
     colorInput.type = "color";
     colorInput.value = color;
     colorPickerItem.appendChild(colorInput);
@@ -137,69 +201,33 @@
       updateAnimationColor(newColor, colorPickers[color].originalColor);
       colorPickers[color].originalColor = newColor;
     });
+
   }
 
   function updateAnimationColor(newColor, previousColor) {
-
-    function updateShapeColor(shapes) {
+    function findAndUpdateColors(shapes) {
       shapes.forEach(shape => {
         if (shape.ty === "st" || shape.ty === "fl") {
-          const originalColor = rgbaToHex(shape.c.k);
-          if (originalColor === previousColor) {
+          const currentColor = rgbaToHex(shape.c.k);
+          if (currentColor === previousColor) {
             shape.c.k = hexToRgba(newColor);
           }
         }
         if (shape.it) {
-          shape.it.forEach(shapeItem => {
-            if (shapeItem.ty === "st" || shapeItem.ty === "fl") {
-              const originalColor = rgbaToHex(shapeItem.c.k);
-              if (originalColor === previousColor) {
-                shapeItem.c.k = hexToRgba(newColor);
-              }
-            }
-
-            if (shapeItem.it) {
-              shapeItem.it.forEach(shape => {
-                if (shape.ty === "st" || shape.ty === "fl") {
-                  const originalColor = rgbaToHex(shape.c.k);
-                  if (originalColor === previousColor) {
-                    shape.c.k = hexToRgba(newColor);
-                  }
-                }
-                if (shape.it) {
-                  shape.it.forEach (s => {
-                    if (s.ty === "st" || s.ty === "fl") {
-                      const originalColor = rgbaToHex(s.c.k);
-                      if (originalColor === previousColor) {
-                        s.c.k = hexToRgba(newColor);
-                      }
-                    }
-
-                    if (s.it) {
-                      s.it.forEach(shape  => {
-                        if (shape.ty === "st" || shape.ty === "fl") {
-                          const originalColor = rgbaToHex(shape.c.k);
-                          if (originalColor === previousColor) {
-                            shape.c.k = hexToRgba(newColor);
-                          }
-                        }
-                      })
-                    }
-
-                  })
-                }
-              })
-            }
-          });
+          findAndUpdateColors(shape.it);
         }
-
       });
     }
 
     if (updatedJsonData.layers) {
       updatedJsonData.layers.forEach(layer => {
         if (layer.shapes) {
-          updateShapeColor(layer.shapes);
+          findAndUpdateColors(layer.shapes);
+        }
+        if (layer.layers) {
+          layer.layers.forEach(layer =>{
+            if (layer.shapes) findAndUpdateColors(layer.shapes);
+          })
         }
       });
     }
@@ -208,13 +236,13 @@
       if (asset.layers) {
         asset.layers.forEach(layer => {
           if (layer.shapes) {
-            updateShapeColor(layer.shapes);
+            findAndUpdateColors(layer.shapes);
           }
         });
       }
     });
 
-    originalJsonData = updatedJsonData;
+    originalJsonData = JSON.parse(JSON.stringify(updatedJsonData));
     initLottieAnimation(updatedJsonData);
   }
 
@@ -233,7 +261,6 @@
     initLottieAnimation(jsonData);
     extractLayersAndColors(jsonData);
   });
-
 </script>
 
 </body>

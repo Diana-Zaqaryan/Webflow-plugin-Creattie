@@ -19,8 +19,11 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
+    "@jaames/iro": "^5.5.2",
     "bootstrap": "^5.3.3",
     "lottie-colorify": "^0.8.0",
+    "lottie-web": "^5.12.2",
+    "ngx-lottie": "^13.0.1",
     "prettier-eslint": "^16.3.0"
   }
 }

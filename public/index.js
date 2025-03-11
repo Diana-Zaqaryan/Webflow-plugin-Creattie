@@ -42,6 +42,15 @@ const page = document.getElementById('page');
 const notAuthProfile = document.getElementById('no-auth-profile');
 const authProfile = document.getElementById('auth-profile');
 const notFound = document.getElementById('not-found');
+const container = document.getElementById("color-container");
+let animation;
+let originalJsonData;
+let colorMapping = {};
+let colorPickers = {};
+let updatedJsonData;
+let selectedItem = null;
+const script = document.createElement("script");
+script.src = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js";
 document.addEventListener("DOMContentLoaded", function () {
     const assetsDropdown = document.getElementById('assets');
     loading.style.display = 'none';
@@ -321,53 +330,78 @@ function fetchData(url) {
 function goBack() {
     productDetails.style.display = 'none';
     products.style.display = 'block';
+    resetColorMappings();
+}
+function resetColorMappings() {
+    container.innerHTML = '';
+    colorMapping = {};
+    colorPickers = {};
 }
 function openProductDetailPage(product) {
-    sessionStorage.setItem('productDetails', JSON.stringify(product));
-    if (!productDetails || !products) {
-        console.error('productDetails or products element not found in the DOM');
-        return;
-    }
-    productDetails.style.display = 'block';
-    products.style.display = 'none';
-    const productsWrapper = document.getElementById('wrapper');
-    if (!productsWrapper) {
-        console.error('productContainer or productsWrapper element not found in the DOM');
-        return;
-    }
-    productsWrapper.textContent = '';
-    if (product) {
-        switch (selectedCategory) {
-            case 'animated':
-            case 'animated icons': {
-                const video = document.createElement('video');
-                video.setAttribute('width', '100%');
-                video.setAttribute('loop', 'loop');
-                video.setAttribute('autoplay', 'autoplay');
-                productsWrapper.appendChild(video);
-                const source = document.createElement('source');
-                source.setAttribute('src', product.video_path);
-                source.setAttribute('type', 'video/mp4');
-                video.appendChild(source);
-                break;
+    return __awaiter(this, void 0, void 0, function* () {
+        resetColorMappings();
+        sessionStorage.setItem('productDetails', JSON.stringify(product));
+        if (!productDetails || !products) {
+            console.error('productDetails or products element not found in the DOM');
+            return;
+        }
+        productDetails.style.display = 'block';
+        products.style.display = 'none';
+        try {
+            const url = `https://creattie.com/api/lotties/${product.slug}`;
+            const token = localStorage.getItem('token');
+            const response = yield fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (response.status === 401) {
+                console.log(`401`);
             }
-            case 'icons':
-            case 'illustrations': {
-                const productImage = document.createElement('img');
-                productImage.setAttribute('id', 'productImage');
-                productImage.src = product.thumb_280;
-                productsWrapper.appendChild(productImage);
+            else {
+                const data = yield response.json();
+                const container = document.getElementById("lottie-container");
+                if (!container) {
+                    console.error("Lottie container not found.");
+                    return;
+                }
+                fetchLottieJson(data.data.path).then(jsonData => {
+                    originalJsonData = jsonData;
+                    initLottieAnimation(jsonData);
+                    updatedJsonData = JSON.parse(JSON.stringify(originalJsonData));
+                    resetColorMappings();
+                    extractLayersAndColors(jsonData);
+                });
+                return;
             }
         }
-        const productName = document.createElement('h4');
-        productName.setAttribute('id', 'productName');
-        productName.style.fontWeight = '400';
-        productName.textContent = product.name;
-        productsWrapper.appendChild(productName);
+        catch (error) {
+            console.error('Error making API call:', error);
+            return;
+        }
+    });
+}
+function fetchLottieJson(url) {
+    return fetch(url)
+        .then(response => response.json())
+        .catch(error => console.error("Error fetching JSON:", error));
+}
+function initLottieAnimation(updatedJsonData) {
+    if (animation) {
+        animation.destroy();
     }
-    else {
-        alert('Product details not found!');
-    }
+    animation = lottie.loadAnimation({
+        container: document.getElementById('lottie-container'),
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: updatedJsonData
+    });
+    selectedItem = updatedJsonData;
+    console.log(selectedItem);
+    animation.setSpeed(2);
 }
 function getOrCreateStyle(styleName) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -495,4 +529,115 @@ function fetchStyles(category) {
 }
 function openFavoritsPage() {
     window.location.href = 'favorites.html';
+}
+/*  Animation part*/
+function extractLayersAndColors(data) {
+    const extractedData = [];
+    function extractLayerColors(layers) {
+        layers.forEach(layer => {
+            const layerName = layer.nm.toLowerCase();
+            if (layer.shapes) {
+                layer.shapes.forEach(shape => {
+                    if (shape.it) {
+                        shape.it.forEach(shapeItem => {
+                            if (shapeItem.ty === "st" || shapeItem.ty === "fl") {
+                                const color = shapeItem.c.k;
+                                colorMapping[layerName] = color;
+                                extractedData.push({
+                                    layer: layer.nm,
+                                    color: rgbaToHex(color),
+                                    originalColor: color
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+    data.assets.forEach(asset => {
+        if (asset.layers) {
+            extractLayerColors(asset.layers);
+        }
+    });
+    if (data.layers) {
+        extractLayerColors(data.layers);
+    }
+    const setOfColors = new Set();
+    extractedData.forEach(value => {
+        setOfColors.add(value.color);
+    });
+    setOfColors.forEach(color => displayColors(color));
+    return extractedData;
+}
+function rgbaToHex(rgba) {
+    const r = Math.round(rgba[0] * 255);
+    const g = Math.round(rgba[1] * 255);
+    const b = Math.round(rgba[2] * 255);
+    const rHex = r.toString(16).padStart(2, '0');
+    const gHex = g.toString(16).padStart(2, '0');
+    const bHex = b.toString(16).padStart(2, '0');
+    return `#${rHex}${gHex}${bHex}`;
+}
+function displayColors(color) {
+    const colorPickerItem = document.createElement("div");
+    colorPickerItem.classList.add("color-picker-item");
+    const colorInput = document.createElement("input");
+    colorInput.setAttribute('id', 'primary_color');
+    colorInput.type = "color";
+    colorInput.value = color;
+    colorPickerItem.appendChild(colorInput);
+    container.appendChild(colorPickerItem);
+    colorPickers[color] = { colorInput: colorInput, originalColor: color };
+    colorInput.addEventListener("input", (event) => {
+        const newColor = event.target.value;
+        updateAnimationColor(newColor, colorPickers[color].originalColor);
+        colorPickers[color].originalColor = newColor;
+    });
+}
+function updateAnimationColor(newColor, previousColor) {
+    function findAndUpdateColors(shapes) {
+        shapes.forEach(shape => {
+            if (shape.ty === "st" || shape.ty === "fl") {
+                const currentColor = rgbaToHex(shape.c.k);
+                if (currentColor === previousColor) {
+                    shape.c.k = hexToRgba(newColor);
+                }
+            }
+            if (shape.it) {
+                findAndUpdateColors(shape.it);
+            }
+        });
+    }
+    if (updatedJsonData.layers) {
+        updatedJsonData.layers.forEach(layer => {
+            if (layer.shapes) {
+                findAndUpdateColors(layer.shapes);
+            }
+            if (layer.layers) {
+                layer.layers.forEach(layer => {
+                    if (layer.shapes)
+                        findAndUpdateColors(layer.shapes);
+                });
+            }
+        });
+    }
+    updatedJsonData.assets.forEach(asset => {
+        if (asset.layers) {
+            asset.layers.forEach(layer => {
+                if (layer.shapes) {
+                    findAndUpdateColors(layer.shapes);
+                }
+            });
+        }
+    });
+    originalJsonData = JSON.parse(JSON.stringify(updatedJsonData));
+    initLottieAnimation(updatedJsonData);
+}
+function hexToRgba(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const a = 1;
+    return [r, g, b, a];
 }

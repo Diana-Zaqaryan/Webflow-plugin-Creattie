@@ -1041,3 +1041,28 @@ video {
   border: 1px solid #444;
   border-radius: 50%;
 }
+
+
+
+#primary_color{
+  border-radius: 50%;
+  height: 30px;
+  width: 30px;
+  border: none;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+#primary_color::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+#primary_color::-webkit-color-swatch {
+  border: none;
+  border-radius: 50%;
+}
+#color-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
