@@ -31,16 +31,19 @@ let style = '';
 let selectedCategory = 'animated';
 let searchText= '';
 const productDetails: any = document.getElementById('details');
+const favorites: any = document.getElementById('favorites')
 const products = document.getElementById('products');
 const loading: any = document.getElementById('loading-indicator-for-requests');
+const loadingInDetails = document.getElementById('loading-indicator-for-details')
 const page = document.getElementById('page');
 const notAuthProfile  = document.getElementById('no-auth-profile');
 const authProfile = document.getElementById('auth-profile')
 const notFound = document.getElementById('not-found');
 const container = document.getElementById("color-container");
-
+const dataContainerInFavorites = document.getElementById('data-container-in-favorites')
 
 declare var lottie: any;
+declare var bodymovin: any
 let animation;
 let originalJsonData;
 let colorMapping = {};
@@ -48,19 +51,29 @@ let colorPickers = {};
 let updatedJsonData;
 let selectedItem = null;
 
+const enum CATEGORIES {
+   ANIMATED_ILLUSTRATION_ID = 1,
+   ILLUSTRATION_ID = 2,
+   ANIMATED_ICON_ID = 3,
+   ICON_ID = 4,
+}
+
 const script = document.createElement("script");
 script.src = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js";
 
 
 document.addEventListener("DOMContentLoaded", function() {
   const assetsDropdown: any = document.getElementById('assets');
-  loading.style.display= 'none'
+  loading.style.display= 'none';
+  loadingInDetails.style.display = 'none';
   productDetails.style.display = 'none';
+  favorites.style.display = 'none'
   notFound.style.display = 'none'
   setNotFoundDisplays(true)
   page.style.display = 'block';
   products.style.display = 'block'
   assetsDropdown.value = 'animated';
+  dataContainerInFavorites.style.display = 'none'
   fetchByCategory('animated', style, '');
   document.getElementById('select-img').style.display = 'none';
   const token = localStorage.getItem('token');
@@ -69,6 +82,9 @@ document.addEventListener("DOMContentLoaded", function() {
     void makeApiCalls(token, 1);
     setDisplays(true)
   }
+
+  const modal = document.getElementById("login-modal");
+  modal.style.display = 'none'
 });
 
 
@@ -100,6 +116,23 @@ document.getElementById('assets').addEventListener('change', (event: any) => {
   resetSelectedStyle();
 });
 
+document.getElementById('assetsOfFavorites').addEventListener('change', (event: any) => {
+  const category  = +event.target.value;
+  style = ''
+  fetchFavorites(category);
+  resetSearchValue()
+  resetSelectedStyle();
+  switch (category){
+    case 1: selectedCategory == 'animated'
+          break;
+    case 2: selectedCategory = 'illustrations'
+          break;
+    case 3: selectedCategory = 'animated icons'
+          break
+    case 4: selectedCategory = 'icons'
+  }
+});
+
 document.getElementById('search').addEventListener('input', function(event:any) {
   const searchQuery: any = event.target.value.trim();
   fetchByCategory(selectedCategory, style, searchQuery);
@@ -112,12 +145,14 @@ document.getElementById('login').addEventListener('click', () =>{
     const url = `https://creattie.com/?webflow-token=${newToke}`
     window.open(url, '_blank');
     void makeApiCalls(newToke, 20).then(r => {return r});
+    goBack()
 })
 
 document.getElementById('logout').addEventListener('click', () =>{
   localStorage.removeItem('token');
   localStorage.removeItem('user')
   void makeApiCalls(localStorage.getItem('token'), 1)
+  goBack()
   setDisplays(false)
 })
 
@@ -261,11 +296,28 @@ function fetchByCategory (category: string, style: string, filteredText?: string
 
 }
 
+function fetchFavorites (category: number) {
+  const url = `https://creattie.com/api/favourites?category=${category}`;
+  switch (category) {
+    case CATEGORIES.ANIMATED_ILLUSTRATION_ID:
+    case CATEGORIES.ANIMATED_ICON_ID:
+      fetchAnimatedFavoriteData(url)
+      break;
+    case CATEGORIES.ICON_ID:
+    case CATEGORIES.ILLUSTRATION_ID:
+      fetchDataForFavorites(url)
+      break;
+  }
+
+}
+
+
 
 function fetchAnimatedIllustrations(url: string) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none'
       const response = yield fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -295,7 +347,10 @@ function fetchAnimatedIllustrations(url: string) {
         return product
       });
       !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
-      document.getElementById('loading-indicator').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('loading-indicator').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block'
+      }, 1000)
     }
     catch (error) {
       console.error('Error fetching data: ', error);
@@ -315,6 +370,7 @@ function fetchData(url: string) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none'
       const response = yield fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -346,7 +402,10 @@ function fetchData(url: string) {
           openProductDetailPage(product)
         });
         dataContainer.appendChild(productDiv);
-        document.getElementById('loading-indicator').style.display = 'none';
+        setTimeout(() => {
+          document.getElementById('loading-indicator').style.display = 'none';
+          document.getElementById('main-content').style.display = 'block'
+        }, 1000)
       });
       !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
     }
@@ -356,8 +415,122 @@ function fetchData(url: string) {
   });
 }
 
+ function fetchAnimatedFavoriteData (url) {
+  return __awaiter(this, void 0, void 0, function* () {
+    try {
+      document.getElementById('loading-indicator').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none'
+      const token = localStorage.getItem('token')
+      const response = yield fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = yield response.json();
+      const dataContainer = document.getElementById('data-container-in-favorites');
+      dataContainer.innerHTML = '';
+      lastPage = data.lastPage;
+      data.wishList.forEach(product => {
+        if (product.videoPath) {
+          const productDiv = document.createElement('div');
+          productDiv.classList.add('product');
+          const video = document.createElement('video');
+          video.setAttribute('width', '100%');
+          video.setAttribute('loop', 'loop');
+          video.setAttribute('autoplay', 'autoplay');
+          const source = document.createElement('source');
+          source.setAttribute('src', product.videoPath);
+          source.setAttribute('type', 'video/mp4');
+          video.appendChild(source);
+          productDiv.appendChild(video)
+          productDiv.addEventListener('click', function () {
+            openProductDetailPage(product)
+          });
+          dataContainer.appendChild(productDiv);
+        }
+        return product
+      });
+      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
+
+      setTimeout(() => {
+        document.getElementById('loading-indicator').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block'
+      },1000)
+
+    } catch (error) {
+      console.error('Error fetching data: ', error);
+    }
+  })
+}
+
+function fetchDataForFavorites (url) {
+  return __awaiter(this, void 0, void 0, function* () {
+    try {
+      document.getElementById('loading-indicator').style.display = 'block';
+      document.getElementById('main-content').style.display = 'none'
+
+      const token = localStorage.getItem('token')
+      const response = yield fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = yield response.json();
+      const dataContainer = document.getElementById('data-container-in-favorites');
+      dataContainer.innerHTML = '';
+      lastPage= data.lastPage;
+      data.wishList.forEach(product => {
+        const productDiv = document.createElement('div');
+        productDiv.classList.add('product');
+        const picture = document.createElement('picture');
+        const source650 = document.createElement('source');
+        source650.setAttribute('media', '(min-width: 650px)');
+        source650.setAttribute('srcset', product.thumb_560);
+        picture.appendChild(source650);
+
+        const source465 = document.createElement('source');
+        source465.setAttribute('media', '(min-width: 465px)');
+        source465.setAttribute('srcset', product.thumb_280);
+        picture.appendChild(source465);
+
+        const img = document.createElement('img');
+        img.setAttribute('src', product.thumb_280);
+        img.setAttribute('alt', product.name + ' image');
+        picture.appendChild(img);
+        productDiv.appendChild(picture);
+        productDiv.addEventListener('click', function() {
+          openProductDetailPage(product)
+        });
+        dataContainer.appendChild(productDiv);
+
+        setTimeout(() =>{
+          document.getElementById('loading-indicator').style.display = 'none';
+          document.getElementById('main-content').style.display = 'block'
+        }, 1000)
+
+      });
+      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
+    }
+    catch (error) {
+      console.error('Error fetching data: ', error);
+    }
+  });
+
+}
+
 function goBack() {
   productDetails.style.display = 'none';
+  favorites.style.display = 'none'
   products.style.display = 'block';
   resetColorMappings()
 }
@@ -368,18 +541,29 @@ function resetColorMappings() {
   colorPickers = {}
 }
 async function openProductDetailPage(product) {
-  resetColorMappings()
+  loadingInDetails.style.display = 'block'
+  document.getElementById('lottie-container').style.display = 'flex';
+  document.getElementById('add').style.display = 'block';
+  resetColorMappings();
   sessionStorage.setItem('productDetails', JSON.stringify(product));
+
   if (!productDetails || !products) {
     console.error('productDetails or products element not found in the DOM');
     return;
   }
+
   productDetails.style.display = 'block';
   products.style.display = 'none';
+  favorites.style.display = 'none';
+  const loginModal = document.getElementById("login-modal");
+  loginModal.style.display = 'none'
+
+  document.getElementById('wrapper').style.display = 'block'
+  console.log(selectedCategory);
 
   try {
-    const url = `https://creattie.com/api/lotties/${product.slug}`
-    const  token = localStorage.getItem('token')
+    const url = `https://creattie.com/api/lotties/${product.slug}`;
+    const token = localStorage.getItem('token');
 
     const response = await fetch(url, {
       method: 'GET',
@@ -389,33 +573,99 @@ async function openProductDetailPage(product) {
       },
     });
 
+
     if (response.status === 401) {
-      console.log(`401`);
-
-    } else {
-      const data = await response.json();
-      const container = document.getElementById("lottie-container");
-
-      if (!container) {
-        console.error("Lottie container not found.");
-        return;
-      }
-
-      fetchLottieJson(data.data.path).then(jsonData => {
-        originalJsonData = jsonData;
-        initLottieAnimation(jsonData);
-        updatedJsonData = JSON.parse(JSON.stringify(originalJsonData))
-        resetColorMappings()
-        extractLayersAndColors(jsonData);
-      });
+      showLoginPrompt();
+      throw new Error('Unauthorized access. Please login.');
       return;
     }
-  } catch (error) {
-    console.error('Error making API call:', error);
-    return;
-  }
 
+
+    switch (selectedCategory) {
+      case 'animated':
+      case 'animated icons':
+        if (response.status === 200) {
+          const data = await response.json();
+          const container = document.getElementById("lottie-container");
+
+          if (!container) {
+            console.error("Lottie container not found.");
+            return;
+          }
+
+          container.innerHTML = '';
+          document.getElementById('color-container').classList.remove('disabled');
+          await fetchLottieJson(data.data.path).then(jsonData => {
+            originalJsonData = jsonData;
+            initLottieAnimation(jsonData);
+            updatedJsonData = JSON.parse(JSON.stringify(originalJsonData));
+            resetColorMappings();
+            extractLayersAndColors(jsonData);
+          });
+        }
+        break;
+
+      case 'icons':
+      case 'illustrations':
+        if (response.status === 200) {
+          const data = await response.json();
+          const container = document.getElementById("lottie-container");
+          if (!container) {
+            console.error("Container not found.");
+            return;
+          }
+          container.innerHTML = '';
+          const parser = new DOMParser();
+          const svgDocument = parser.parseFromString(data.data.path, "image/svg+xml");
+          selectedItem = data.data.path
+          const svgElement = svgDocument.documentElement;
+          console.log(extractStylesFromSvg(svgElement))
+          container.appendChild(svgElement);
+        }
+        break;
+
+      default:
+        console.error('Unknown category: ' + selectedCategory);
+        break;
+    }
+    loadingInDetails.style.display= 'none';
+  } catch (error) {
+    document.getElementById('lottie-container').style.display = 'none';
+    const container = document.getElementById('color-container');
+    container.classList.add('disabled');
+
+    let overlayElement = container.querySelector('.overlay-message');
+    if (!overlayElement) {
+      overlayElement = document.createElement('p');
+      overlayElement.classList.add('overlay-message');
+      overlayElement.innerHTML = 'Editing functions are available only for free items and paid plan users';
+      container.appendChild(overlayElement);
+    }
+
+    let icon = container.querySelector('.fa-edit');
+    if (!icon) {
+      icon = document.createElement('i');
+      icon.classList.add('fa-solid', 'fa-edit');
+      container.appendChild(icon);
+    }
+
+    document.getElementById('add').style.display = 'none';
+    console.error('Error making API call:', error);
+  }
 }
+
+
+function showLoginPrompt() {
+  const loginModal = document.getElementById("login-modal");
+  document.getElementById('wrapper').style.display = 'none'
+  loadingInDetails.style.display = 'none'
+  if (loginModal) {
+    loginModal.style.display = "block";
+  } else {
+    alert("You must log in to change the item.");
+  }
+}
+
 
 function fetchLottieJson(url) {
   return fetch(url)
@@ -435,8 +685,6 @@ function initLottieAnimation(updatedJsonData) {
     animationData: updatedJsonData
   });
   selectedItem = updatedJsonData
-
-  console.log(selectedItem)
   animation.setSpeed(2);
 }
 
@@ -457,43 +705,78 @@ async function getOrCreateStyle(styleName) {
 }
 
 const addAsset = async () => {
-  const el = await webflow.getSelectedElement();
+  const el: any = await webflow.getSelectedElement();
 
-  if (el && el.styles && el.children) {
-    const productDetails = JSON.parse(sessionStorage.getItem('productDetails'));
-    const labelElement = await el.before(webflow.elementPresets.DOM);
-    const newStyle = await getOrCreateStyle('elementStyle');
-    await newStyle.setProperties({
-      "padding-left": "0 ",
-      "padding-right": "0 ",
-      "padding-top": "0 ",
-      "padding-bottom": "0 ",
-    });
-
-    await el.setStyles([newStyle]);
-    await labelElement.setStyles([newStyle])
-
-    switch (selectedCategory) {
+  if (!el) {
+    alert("Please select an element");
+    return;
+  }
+  switch (selectedCategory) {
       case 'animated':
       case 'animated icons':
-        await labelElement.setTag('video');
-        await labelElement.setAttribute('loop', 'loop');
-        await labelElement.setAttribute('autoplay', 'autoplay');
-        await labelElement.setAttribute('type', 'video/mp4');
-        await labelElement.setAttribute('src', productDetails.video_path);
-        await labelElement.setAttribute('width', '250px');
-        await labelElement.setAttribute('height', '250px');
+        try {
+          console.log(el)
+          const newAnimation = await el?.prepend(webflow.elementPresets.Animation);
+          const newAnimationDomElement = document.getElementById(newAnimation.id.element);
+          console.log(newAnimationDomElement)
+          const newStyle = await getOrCreateStyle('elementStyle');
+          await newStyle.setProperties({
+            "padding-left": "0",
+            "padding-right": "0",
+            "padding-top": "0",
+            "padding-bottom": "0",
+            "width": "100px",
+            "height": "100px",
+          });
+
+          await newAnimation.setStyles([newStyle]);
+          setTimeout(() => {
+            console.log(newAnimation)
+            const lottieInstance = bodymovin.loadAnimation({
+              container: el,
+              renderer: "svg",
+              loop: true,
+              autoplay: true,
+              animationData: selectedItem,
+            });
+            lottieInstance.setSpeed(2);
+          }, 100);
+        } catch (error) {
+          console.error("Error loading Lottie animation:", error);
+        }
         break;
 
       case 'icons':
       case 'illustrations':
-        await labelElement.setTag("img");
-        await labelElement.setAttribute('src', productDetails.thumb_280);
+        try {
+
+          const newDiv = await el.append(webflow.elementPresets.DivBlock);
+
+
+          const svgElement = document.createElement('svg');
+          svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          svgElement.setAttribute('viewBox', '0 0 100 100');
+          svgElement.setAttribute('width', '100');
+          svgElement.setAttribute('height', '100');
+
+          const circle = document.createElement('circle');
+          circle.setAttribute('cx', '50');
+          circle.setAttribute('cy', '50');
+          circle.setAttribute('r', '40');
+          circle.setAttribute('stroke', 'black');
+          circle.setAttribute('stroke-width', '3');
+          circle.setAttribute('fill', 'red');
+
+          svgElement.appendChild(circle);
+
+          newDiv.append(svgElement);
+
+        } catch (error) {
+          console.error("Error loading illustration:", error);
+        }
         break;
-    }
-  } else {
-    alert("Please select an element");
   }
+
 };
 
 function populateStylesDropdown(stylesData) {
@@ -578,7 +861,11 @@ function fetchStyles(category) {
 
 
 function openFavoritsPage() {
-  window.location.href = 'favorites.html';
+  favorites.style.display = 'flex';
+  products.style.display = 'none';
+  productDetails.style.display = 'none'
+  dataContainerInFavorites.style.display = 'grid'
+  fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1')
 }
 
 
@@ -589,7 +876,6 @@ function openFavoritsPage() {
 
 function extractLayersAndColors(data) {
   const extractedData = [];
-
   function extractLayerColors(layers) {
     layers.forEach(layer => {
       const layerName = layer.nm.toLowerCase();
@@ -621,6 +907,9 @@ function extractLayersAndColors(data) {
 
   if (data.layers) {
     extractLayerColors(data.layers);
+    if (data.layers.layers) {
+      extractLayerColors(data.layers.layers)
+    }
   }
 
   const setOfColors = new Set();
@@ -636,13 +925,19 @@ function rgbaToHex(rgba) {
   const r = Math.round(rgba[0] * 255);
   const g = Math.round(rgba[1] * 255);
   const b = Math.round(rgba[2] * 255);
-  const rHex = r.toString(16).padStart(2, '0');
-  const gHex = g.toString(16).padStart(2, '0');
-  const bHex = b.toString(16).padStart(2, '0');
+  // @ts-ignore
+  const rHex = r.toString(16).padStart(2, "0");
+  // @ts-ignore
+  const gHex = g.toString(16).padStart(2, "0");
+  // @ts-ignore
+  const bHex = b.toString(16).padStart(2, "0");
   return `#${rHex}${gHex}${bHex}`;
 }
 
-function displayColors(color) {
+function displayColors(color, svg?) {
+  if (color === '#fff') {
+    color = '#ffffff'
+  }
   const colorPickerItem = document.createElement("div");
   colorPickerItem.classList.add("color-picker-item");
   const colorInput = document.createElement("input");
@@ -654,13 +949,83 @@ function displayColors(color) {
   colorPickers[color] = { colorInput: colorInput, originalColor: color };
   colorInput.addEventListener("input", (event: any) => {
     const newColor = event.target.value;
-    updateAnimationColor(newColor, colorPickers[color].originalColor);
+    switch (selectedCategory) {
+      case 'animated':
+      case 'animated icons':
+        updateAnimationColor(newColor, colorPickers[color].originalColor);
+        break;
+
+      case 'icons':
+      case 'illustrations':
+        updateIllustrationColor(newColor, colorPickers[color].originalColor, svg)
+        break;
+
+      default:
+        console.error('Unknown category: ' + selectedCategory);
+        break;
+    }
     colorPickers[color].originalColor = newColor;
   });
 
 }
 
+function updateIllustrationColor(newColor, previousColor, svgElement) {
+  const elementTypes = ['circle', 'path', 'rect', 'line', 'ellipse', 'polygon', 'polyline'];
+
+  elementTypes.forEach(type => {
+    const elements = svgElement.querySelectorAll(type);
+
+    elements.forEach(el => {
+      const computedStyle = window.getComputedStyle(el);
+      const currentFillColor = rgbToHex(computedStyle.fill);
+      const currentStrokeColor = rgbToHex(computedStyle.stroke);
+      if (currentFillColor === previousColor) {
+        el.style.fill = newColor;
+      }
+      if (currentStrokeColor === previousColor) {
+        el.style.stroke = newColor;
+      }
+    });
+
+    const g = svgElement.querySelectorAll('g')
+    g.forEach(item => {
+      const elements = item.querySelectorAll(type);
+      elements.forEach(el => {
+        console.log(elements)
+        const computedStyle = window.getComputedStyle(el);
+        const currentFillColor = rgbToHex(computedStyle.fill);
+        const currentStrokeColor = rgbToHex(computedStyle.stroke);
+        if (currentFillColor === previousColor) {
+          el.style.fill = newColor;
+        }
+        if (currentStrokeColor === previousColor) {
+          el.style.stroke = newColor;
+        }
+      });
+    })
+    console.log(elements)
+
+  });
+
+  console.log(`Updated color from ${previousColor} to ${newColor}`);
+}
+
+
+function rgbToHex(rgb) {
+  if (!rgb || rgb === "none") return rgb;
+
+  const match = rgb.match(/\d+/g);
+  if (!match) return rgb;
+
+  return `#${match.slice(0, 3)
+      // @ts-ignore
+      .map(x => parseInt(x).toString(16).padStart(2, "0")) 
+      .join("")}`;
+}
+
 function updateAnimationColor(newColor, previousColor) {
+  console.log(newColor, previousColor)
+
   function findAndUpdateColors(shapes) {
     shapes.forEach(shape => {
       if (shape.ty === "st" || shape.ty === "fl") {
@@ -709,4 +1074,75 @@ function hexToRgba(hex) {
   const a = 1;
   return [r, g, b, a];
 }
+
+function extractStylesFromSvg(svgElement) {
+  const styles = [];
+
+  const styleElement = svgElement.querySelector('style');
+
+  if (styleElement) {
+    const styles = styleElement.textContent || styleElement.innerText;
+
+    const ruleRegex = /\.([^{]+)\{([^}]+)}/g;
+    const classColors = [];
+    let match;
+    while ((match = ruleRegex.exec(styles)) !== null) {
+      const className = match[1];
+      const fillColor = match[2];
+      const strokeColor = match[3];
+
+      classColors.push({
+        className,
+        fillColor,
+        strokeColor
+      });
+    }
+
+    const stylesByClass = {};
+    const setOfColors = new Set;
+
+    classColors.forEach((item) => {
+      const classNames = item.className.split(",").map((cls) => cls.trim());
+      const fillStyles = parseStyle(item.fillColor);
+      const strokeStyles = parseStyle(item.strokeColor);
+
+      if (fillStyles.fill && fillStyles.fill !== 'none') {
+        setOfColors.add(fillStyles.fill)
+      }
+      if (fillStyles.stroke && fillStyles.stroke !== 'none'){
+        setOfColors.add(fillStyles.stroke)
+      }
+
+      console.log('colors set', setOfColors)
+      classNames.forEach((cls) => {
+        stylesByClass[cls] = {
+          ...stylesByClass[cls],
+          ...fillStyles,
+          ...strokeStyles
+        };
+      });
+    });
+    setOfColors.forEach(color => displayColors(color, svgElement))
+
+    console.log("Styles by class:", stylesByClass);
+  } else {
+    console.log('No style element found.');
+  }
+  return styles;
+}
+
+
+function parseStyle(styleString) {
+  if (!styleString) return {};
+  return styleString.split(";").reduce((acc, prop) => {
+    const [key, value] = prop.split(":").map((s) => s.trim());
+    if (key && value) acc[key] = value;
+    return acc;
+  }, {});
+}
+
+
+
+
+
 

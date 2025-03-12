@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "npm install && tsc -p tsconfig.json && webflow extension bundle && mv bundle.zip bundle/prod/bundle_$(data + '%Y-$m-$d_%H-%M-%S')",
+    "build": "tsc -p tsconfig.json && webflow extension bundle && mv bundle.zip bundle/prod/bundle_$(data + '%Y-$m-$d_%H-%M-%S')",
     "dev": "npm install && concurrently -r \"webflow extension serve\" \"tsc -p tsconfig.json --watch --preserveWatchOutput\"",
     "lint": "eslint . --ext .ts"
   },

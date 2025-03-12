@@ -10,7 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Carter+One&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.7.10/lottie.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 
 <body>
@@ -68,22 +69,40 @@
   </header>
 
   <main>
+      <div class="details-container" id="details">
+          <div id="loading-indicator-for-details">
+              <div class="load" >
+                  <figure class="loader" style="left: 42%">
+                      <div class="dot white"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                      <div class="dot"></div>
+                  </figure>
+              </div>
+          </div>
 
-    <div class="details-container" id="details">
-      <div class="button-wrapper">
-        <button onclick="goBack()">Back</button>
-      </div>
-      <div class="product-details-wrapper" id="wrapper">
-        <div id="product-details-container"></div>
-      </div>
+          <div class="button-wrapper">
+              <button onclick="goBack()">Back</button>
+          </div>
 
-        <div id="lottie-container"></div>
-        <div id="color-container"></div>
+          <div id="login-modal" class="modal">
+              <div class="modal-content">
+                  <h2>Login Required</h2>
+                  <p>To change this item, you must be logged in.</p>
+              </div>
+          </div>
 
-      <button id="add" onclick="addAsset()">Add asset</button>
+          <div class="product-details-wrapper" id="wrapper">
+              <div id="product-details-container"></div>
+              <div id="lottie-container"></div>
+              <div id="color-container"></div>
+              <button id="add" onclick="addAsset()">Add asset</button>
+          </div>
+
     </div>
 
-    <div class="main-wrapper" id="products">
+      <div class="main-wrapper" id="products">
       <div class="filter-wrapper">
         <div class="filters">
           <select id="assets" name="assets"  onchange="handleSelectionChangeInMain()">
@@ -121,17 +140,35 @@
           </figure>
         </div>
       </div>
-      <div class="cards-wrapper">
-        <div class="cards-content">
-          <div id="data-container"></div>
-        </div>
-      </div>
+          <div id="main-content">
+              <div class="cards-wrapper">
+                  <div class="cards-content">
+                      <div id="data-container"></div>
+                  </div>
+              </div>
+              <div class="buttons-wrapper" id="navigation-buttons">
+                  <button>Previous</button>
+                  <button>Next</button>
+              </div>
+          </div>
 
-      <div class="buttons-wrapper" id="navigation-buttons">
-        <button>Previous</button>
-        <button>Next</button>
-      </div>
     </div>
+
+      <div class="favorites-wrapper" id="favorites">
+          <div class="button-wrapper">
+              <button onclick="goBack()">Back</button>
+          </div>
+          <select id="assetsOfFavorites" name="assets" class="favorites-select" onchange="handleSelectionChangeInMain()">
+              <option value="1" selected style="'font-family: Carter One, system-ui;'">Animated illustrations</option>
+              <option value="2" style="'font-family: Carter One, system-ui;'">Illustrations</option>
+              <option value="3" style="'font-family: Carter One, system-ui;'">Animated Icons</option>
+              <option value="4" style="'font-family: Carter One, system-ui;'">Icons</option>
+          </select>
+          <div class="cards-content">
+              <div id="data-container-in-favorites"></div>
+          </div>
+
+      </div>
 
     <div class="wrapper" id="not-found">
       <div class="main">
