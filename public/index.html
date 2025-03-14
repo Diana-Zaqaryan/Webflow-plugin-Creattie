@@ -82,20 +82,23 @@
               </div>
           </div>
 
-          <div class="button-wrapper">
+
+
+          <div class="button-wrapper" id="back-button">
               <button onclick="goBack()">Back</button>
           </div>
-
           <div id="login-modal" class="modal">
               <div class="modal-content">
-                  <h2>Login Required</h2>
-                  <p>To change this item, you must be logged in.</p>
+                  <h2>Access Denied</h2>
+                  <p id="modal-message"></p>
+                  <i class="fa-solid fa-triangle-exclamation"></i>
               </div>
           </div>
-
           <div class="product-details-wrapper" id="wrapper">
               <div id="product-details-container"></div>
               <div id="lottie-container"></div>
+              <div class="overlay" >
+              </div>
               <div id="color-container"></div>
               <button id="add" onclick="addAsset()">Add asset</button>
           </div>

@@ -1,3 +1,4 @@
+
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
   function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
   return new (P || (P = Promise))(function (resolve, reject) {
@@ -541,7 +542,9 @@ function resetColorMappings() {
   colorPickers = {}
 }
 async function openProductDetailPage(product) {
-  loadingInDetails.style.display = 'block'
+  loadingInDetails.style.display = 'block';
+  document.getElementById('wrapper').style.display = 'none';
+  document.getElementById('back-button').style.display = 'none'
   document.getElementById('lottie-container').style.display = 'flex';
   document.getElementById('add').style.display = 'block';
   resetColorMappings();
@@ -558,8 +561,6 @@ async function openProductDetailPage(product) {
   const loginModal = document.getElementById("login-modal");
   loginModal.style.display = 'none'
 
-  document.getElementById('wrapper').style.display = 'block'
-  console.log(selectedCategory);
 
   try {
     const url = `https://creattie.com/api/lotties/${product.slug}`;
@@ -574,13 +575,17 @@ async function openProductDetailPage(product) {
     });
 
 
-    if (response.status === 401) {
-      showLoginPrompt();
+    if (response.status === 401 ) {
+      showModal(false, true);
       throw new Error('Unauthorized access. Please login.');
       return;
     }
 
-
+    if (response.status === 403) {
+      showModal(true, false);
+      throw new Error('No Permissions')
+      return;
+    }
     switch (selectedCategory) {
       case 'animated':
       case 'animated icons':
@@ -615,11 +620,12 @@ async function openProductDetailPage(product) {
             return;
           }
           container.innerHTML = '';
+          document.getElementById('color-container').classList.remove('disabled');
           const parser = new DOMParser();
           const svgDocument = parser.parseFromString(data.data.path, "image/svg+xml");
           selectedItem = data.data.path
           const svgElement = svgDocument.documentElement;
-          console.log(extractStylesFromSvg(svgElement))
+          extractStylesFromSvg(svgElement)
           container.appendChild(svgElement);
         }
         break;
@@ -628,13 +634,19 @@ async function openProductDetailPage(product) {
         console.error('Unknown category: ' + selectedCategory);
         break;
     }
-    loadingInDetails.style.display= 'none';
+
+    setTimeout(() => {
+      loadingInDetails.style.display= 'none';
+      document.getElementById('wrapper').style.display = 'block';
+      document.getElementById('back-button').style.display = 'block'
+    }, 800)
   } catch (error) {
     document.getElementById('lottie-container').style.display = 'none';
+    document.getElementById('back-button').style.display = 'block'
     const container = document.getElementById('color-container');
     container.classList.add('disabled');
 
-    let overlayElement = container.querySelector('.overlay-message');
+    let overlayElement = container.querySelector('.overlay');
     if (!overlayElement) {
       overlayElement = document.createElement('p');
       overlayElement.classList.add('overlay-message');
@@ -655,15 +667,17 @@ async function openProductDetailPage(product) {
 }
 
 
-function showLoginPrompt() {
-  const loginModal = document.getElementById("login-modal");
+function showModal(userLoggedIn, hasPermission) {
+  const modalMessage = document.getElementById('modal-message');
   document.getElementById('wrapper').style.display = 'none'
   loadingInDetails.style.display = 'none'
-  if (loginModal) {
-    loginModal.style.display = "block";
-  } else {
-    alert("You must log in to change the item.");
+  if (!userLoggedIn) {
+    modalMessage.innerText = "You must be logged in to perform this action. Please log in.";
+  } else if (!hasPermission) {
+    modalMessage.innerText = "You do not have the required permissions to modify this item.";
   }
+
+  document.getElementById('login-modal').style.display = 'block';
 }
 
 
@@ -706,7 +720,17 @@ async function getOrCreateStyle(styleName) {
 
 const addAsset = async () => {
   const el: any = await webflow.getSelectedElement();
+  const labelElement = await el.before(webflow.elementPresets.DOM);
+  const newStyle = await getOrCreateStyle('elementStyle');
+  await newStyle.setProperties({
+    "padding-left": "0 ",
+    "padding-right": "0 ",
+    "padding-top": "0 ",
+    "padding-bottom": "0 ",
+  });
 
+  await el.setStyles([newStyle]);
+  await labelElement.setStyles([newStyle])
   if (!el) {
     alert("Please select an element");
     return;
@@ -715,33 +739,18 @@ const addAsset = async () => {
       case 'animated':
       case 'animated icons':
         try {
-          console.log(el)
-          const newAnimation = await el?.prepend(webflow.elementPresets.Animation);
-          const newAnimationDomElement = document.getElementById(newAnimation.id.element);
-          console.log(newAnimationDomElement)
-          const newStyle = await getOrCreateStyle('elementStyle');
-          await newStyle.setProperties({
-            "padding-left": "0",
-            "padding-right": "0",
-            "padding-top": "0",
-            "padding-bottom": "0",
-            "width": "100px",
-            "height": "100px",
-          });
+          const selectedItemJSON = JSON.stringify(selectedItem);
+          const file = new File([selectedItemJSON], 'animation.json', {type: 'application/json'});
+          const asset = await webflow.createAsset(file);
 
-          await newAnimation.setStyles([newStyle]);
-          setTimeout(() => {
-            console.log(newAnimation)
-            const lottieInstance = bodymovin.loadAnimation({
-              container: el,
-              renderer: "svg",
-              loop: true,
-              autoplay: true,
-              animationData: selectedItem,
-            });
-            lottieInstance.setSpeed(2);
-          }, 100);
-        } catch (error) {
+          const assetId = await webflow.getAssetById(asset.id);
+          const url = await assetId.getUrl();
+          console.log(`Asset URL: ${url}`);
+
+          const animationEl = await el.append(webflow.elementPresets.Animation);
+
+        }
+        catch (error) {
           console.error("Error loading Lottie animation:", error);
         }
         break;
@@ -750,26 +759,17 @@ const addAsset = async () => {
       case 'illustrations':
         try {
 
-          const newDiv = await el.append(webflow.elementPresets.DivBlock);
+          const svgContent = selectedItem.toString();
+          const file = new File([svgContent], 'illustration.svg', { type: 'image/svg+xml' });
+          const asset = await webflow.createAsset(file);
+          const assetId = await webflow.getAssetById(asset.id)
+          const url = await assetId.getUrl()
+          console.log(`Asset URL: ${url}`)
 
-
-          const svgElement = document.createElement('svg');
-          svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-          svgElement.setAttribute('viewBox', '0 0 100 100');
-          svgElement.setAttribute('width', '100');
-          svgElement.setAttribute('height', '100');
-
-          const circle = document.createElement('circle');
-          circle.setAttribute('cx', '50');
-          circle.setAttribute('cy', '50');
-          circle.setAttribute('r', '40');
-          circle.setAttribute('stroke', 'black');
-          circle.setAttribute('stroke-width', '3');
-          circle.setAttribute('fill', 'red');
-
-          svgElement.appendChild(circle);
-
-          newDiv.append(svgElement);
+          await labelElement.setTag('img');
+          await labelElement.setAttribute('src', url);
+          await labelElement.setAttribute('width', '250px');
+          await labelElement.setAttribute('height', '250px');
 
         } catch (error) {
           console.error("Error loading illustration:", error);
@@ -938,6 +938,9 @@ function displayColors(color, svg?) {
   if (color === '#fff') {
     color = '#ffffff'
   }
+  if (color === '#000') {
+    color = '#000000'
+  }
   const colorPickerItem = document.createElement("div");
   colorPickerItem.classList.add("color-picker-item");
   const colorInput = document.createElement("input");
@@ -968,13 +971,15 @@ function displayColors(color, svg?) {
   });
 
 }
-
+function serializeSvgToString(svgElement) {
+  const serializer = new XMLSerializer();
+  return serializer.serializeToString(svgElement);
+}
 function updateIllustrationColor(newColor, previousColor, svgElement) {
   const elementTypes = ['circle', 'path', 'rect', 'line', 'ellipse', 'polygon', 'polyline'];
 
   elementTypes.forEach(type => {
     const elements = svgElement.querySelectorAll(type);
-
     elements.forEach(el => {
       const computedStyle = window.getComputedStyle(el);
       const currentFillColor = rgbToHex(computedStyle.fill);
@@ -991,7 +996,6 @@ function updateIllustrationColor(newColor, previousColor, svgElement) {
     g.forEach(item => {
       const elements = item.querySelectorAll(type);
       elements.forEach(el => {
-        console.log(elements)
         const computedStyle = window.getComputedStyle(el);
         const currentFillColor = rgbToHex(computedStyle.fill);
         const currentStrokeColor = rgbToHex(computedStyle.stroke);
@@ -1003,8 +1007,7 @@ function updateIllustrationColor(newColor, previousColor, svgElement) {
         }
       });
     })
-    console.log(elements)
-
+    selectedItem = serializeSvgToString(svgElement)
   });
 
   console.log(`Updated color from ${previousColor} to ${newColor}`);
@@ -1077,12 +1080,34 @@ function hexToRgba(hex) {
 
 function extractStylesFromSvg(svgElement) {
   const styles = [];
+  const setOfColors = new Set;
+
+
+
+  const elements = svgElement.querySelectorAll('*');
+  elements.forEach(element => {
+    let stylesArr
+    const styles = element.getAttribute('style')
+    console.log(element)
+    if (styles) {
+      stylesArr = styles.split(';')
+      const colors = {};
+
+      stylesArr.forEach(style => {
+        if (!style) return;
+        const [property, value] = style.split(':');
+        if ( property === 'stroke') {
+          colors[property] = value;
+          setOfColors.add(value)
+        }
+      });
+    }
+  });
+  setOfColors.forEach(color => displayColors(color, svgElement))
 
   const styleElement = svgElement.querySelector('style');
-
   if (styleElement) {
     const styles = styleElement.textContent || styleElement.innerText;
-
     const ruleRegex = /\.([^{]+)\{([^}]+)}/g;
     const classColors = [];
     let match;
@@ -1099,7 +1124,6 @@ function extractStylesFromSvg(svgElement) {
     }
 
     const stylesByClass = {};
-    const setOfColors = new Set;
 
     classColors.forEach((item) => {
       const classNames = item.className.split(",").map((cls) => cls.trim());
@@ -1123,8 +1147,6 @@ function extractStylesFromSvg(svgElement) {
       });
     });
     setOfColors.forEach(color => displayColors(color, svgElement))
-
-    console.log("Styles by class:", stylesByClass);
   } else {
     console.log('No style element found.');
   }
