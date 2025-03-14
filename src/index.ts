@@ -602,6 +602,7 @@ async function openProductDetailPage(product) {
           document.getElementById('color-container').classList.remove('disabled');
           await fetchLottieJson(data.data.path).then(jsonData => {
             originalJsonData = jsonData;
+            console.log(jsonData)
             initLottieAnimation(jsonData);
             updatedJsonData = JSON.parse(JSON.stringify(originalJsonData));
             resetColorMappings();
@@ -881,6 +882,15 @@ function extractLayersAndColors(data) {
       const layerName = layer.nm.toLowerCase();
       if (layer.shapes) {
         layer.shapes.forEach(shape => {
+          if (shape.c) {
+            const color = shape.c.k;
+            colorMapping[layerName] = color;
+            extractedData.push({
+              layer: layer.nm,
+              color: rgbaToHex(color),
+              originalColor: color
+            });
+          }
           if (shape.it) {
             shape.it.forEach(shapeItem => {
               if (shapeItem.ty === "st" || shapeItem.ty === "fl") {
