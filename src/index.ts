@@ -1001,20 +1001,24 @@ function serializeSvgToString(svgElement) {
   return serializer.serializeToString(svgElement);
 }
 function updateIllustrationColor(newColor, previousColor, svgElement) {
-  const elementTypes = ['circle', 'path', 'rect', 'line', 'ellipse', 'polygon', 'polyline'];
-
+  const elementTypes = ['circle', 'path', 'rect', 'line', 'ellipse', 'polygon', 'polyline', 'stop'];
   elementTypes.forEach(type => {
     const elements = svgElement.querySelectorAll(type);
     elements.forEach(el => {
       const computedStyle = window.getComputedStyle(el);
       const currentFillColor = rgbToHex(computedStyle.fill);
       const currentStrokeColor = rgbToHex(computedStyle.stroke);
+      const currentStopColor = el.getAttribute('stop-color')
       if (currentFillColor === previousColor) {
         el.style.fill = newColor;
       }
       if (currentStrokeColor === previousColor) {
         el.style.stroke = newColor;
       }
+      if (currentStopColor === previousColor) {
+        el.setAttribute('stop-color', newColor)
+      }
+
     });
 
     const g = svgElement.querySelectorAll('g')
@@ -1106,9 +1110,6 @@ function hexToRgba(hex) {
 function extractStylesFromSvg(svgElement) {
   const styles = [];
   const setOfColors = new Set;
-
-
-
   const elements = svgElement.querySelectorAll('*');
   elements.forEach(element => {
     let stylesArr
@@ -1170,12 +1171,22 @@ function extractStylesFromSvg(svgElement) {
         };
       });
     });
+
+    const gradientElements = svgElement.querySelectorAll('stop');
+    if (gradientElements.length) {
+      gradientElements.forEach(gradientElement => {
+        const stopcolor = gradientElement.getAttribute('stop-color')
+        setOfColors.add(stopcolor)
+      })
+
+    }
     const colors  = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item as string));
 
     colors.forEach(color => displayColors(color, svgElement))
   } else {
     console.log('No style element found.');
   }
+
   return styles;
 }
 
