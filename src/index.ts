@@ -112,8 +112,8 @@ document.querySelector('.buttons-wrapper button:nth-child(1)').addEventListener(
 document.getElementById('assets').addEventListener('change', (event: any) => {
   selectedCategory = event.target.value;
   style = ''
-  fetchByCategory(selectedCategory, style, '');
-  resetSearchValue()
+  fetchByCategory(selectedCategory, style, searchText);
+  // resetSearchValue()
   resetSelectedStyle();
 });
 
@@ -121,16 +121,16 @@ document.getElementById('assetsOfFavorites').addEventListener('change', (event: 
   const category  = +event.target.value;
   style = ''
   fetchFavorites(category);
-  resetSearchValue()
+  // resetSearchValue()
   resetSelectedStyle();
   switch (category){
     case 1: selectedCategory == 'animated'
           break;
-    case 2: selectedCategory = 'illustrations'
+    case 2: selectedCategory == 'illustrations'
           break;
-    case 3: selectedCategory = 'animated icons'
+    case 3: selectedCategory == 'animated icons'
           break
-    case 4: selectedCategory = 'icons'
+    case 4: selectedCategory == 'icons'
   }
 });
 
@@ -245,10 +245,10 @@ function setProfileStyles(user) {
   authProfile.innerHTML = user.name.slice(0,1)
 }
 
-function resetSearchValue () {
-  const search: any = document.getElementById('search')
-  search.value =''
-}
+// function resetSearchValue () {
+//   const search: any = document.getElementById('search')
+//   search.value =''
+// }
 
 // function handleSelectionChange() {
 //   const select: any = document.getElementById('selection');
@@ -746,9 +746,10 @@ const addAsset = async () => {
 
           const assetId = await webflow.getAssetById(asset.id);
           const url = await assetId.getUrl();
-          console.log(`Asset URL: ${url}`);
-
-          const animationEl = await el.append(webflow.elementPresets.Animation);
+          const childElement = await el.prepend(webflow.elementPresets.Animation);
+          if (childElement.type === 'Animation') {
+            console.log(childElement)
+          }
 
         }
         catch (error) {
@@ -822,8 +823,8 @@ function populateStylesDropdown(stylesData) {
       document.getElementById('select-img').style.borderRadius = '50%';
       document.querySelector('.custom-select').classList.remove('open');
       style = selectedStyle;
-      fetchByCategory(selectedCategory, style, '');
-      resetSearchValue()
+      fetchByCategory(selectedCategory, style, searchText);
+      // resetSearchValue()
     });
   });
 
@@ -901,7 +902,21 @@ function extractLayersAndColors(data) {
                     color: rgbaToHex(color),
                     originalColor: color
                   });
-                }
+              }
+              if (shapeItem.it) {
+                shapeItem.it.forEach (s => {
+                  if (s.ty === "st" || s.ty === "fl") {
+                    const color = s.c.k;
+                    colorMapping[layerName] = color;
+                    extractedData.push({
+                      layer: layer.nm,
+                      color: rgbaToHex(color),
+                      originalColor: color
+                    });
+                  }
+                })
+              }
+
             });
           }
         });
@@ -1098,7 +1113,6 @@ function extractStylesFromSvg(svgElement) {
   elements.forEach(element => {
     let stylesArr
     const styles = element.getAttribute('style')
-    console.log(element)
     if (styles) {
       stylesArr = styles.split(';')
       const colors = {};
@@ -1156,7 +1170,9 @@ function extractStylesFromSvg(svgElement) {
         };
       });
     });
-    setOfColors.forEach(color => displayColors(color, svgElement))
+    const colors  = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item as string));
+
+    colors.forEach(color => displayColors(color, svgElement))
   } else {
     console.log('No style element found.');
   }
