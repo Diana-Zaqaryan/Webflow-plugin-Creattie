@@ -697,7 +697,7 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
                                                 "totalDuration": null,
                                             },
                                             "renderMode": "svg",
-                                            "loop": false,
+                                            "loop": true,
                                             "playInReverse": false
                                         }
                                     },

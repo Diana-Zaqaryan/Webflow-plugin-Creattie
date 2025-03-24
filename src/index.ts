@@ -768,7 +768,7 @@ const addAsset = async () => {
                         "totalDuration": null,
                       },
                       "renderMode": "svg",
-                      "loop": false,
+                      "loop": true,
                       "playInReverse": false
                     }
                   },
