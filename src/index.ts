@@ -51,7 +51,7 @@ let colorMapping = {};
 let colorPickers = {};
 let updatedJsonData;
 let selectedItem = null;
-
+let svgName = ''
 const enum CATEGORIES {
    ANIMATED_ILLUSTRATION_ID = 1,
    ILLUSTRATION_ID = 2,
@@ -225,9 +225,7 @@ async function makeApiCalls(token: string, retries: number) {
         page.style.display = 'block';
         setDisplays(true)
         setProfileStyles(data.data);
-        console.log('Data received:', data);
         localStorage.setItem('token', token);
-        console.log('Data received:', data);
         return;
       }
     } catch (error) {
@@ -624,7 +622,8 @@ async function openProductDetailPage(product) {
           document.getElementById('color-container').classList.remove('disabled');
           const parser = new DOMParser();
           const svgDocument = parser.parseFromString(data.data.path, "image/svg+xml");
-          selectedItem = data.data.path
+          selectedItem = data.data.path;
+          svgName = data.data.name;
           const svgElement = svgDocument.documentElement;
           extractStylesFromSvg(svgElement)
           container.appendChild(svgElement);
@@ -719,9 +718,12 @@ async function getOrCreateStyle(styleName) {
   return newStyle;
 }
 
+function generateUniqueId() {
+  return crypto.randomUUID();
+}
+
 const addAsset = async () => {
   const el: any = await webflow.getSelectedElement();
-  const labelElement = await el.before(webflow.elementPresets.DOM);
   const newStyle = await getOrCreateStyle('elementStyle');
   await newStyle.setProperties({
     "padding-left": "0 ",
@@ -730,8 +732,7 @@ const addAsset = async () => {
     "padding-bottom": "0 ",
   });
 
-  await el.setStyles([newStyle]);
-  await labelElement.setStyles([newStyle])
+
   if (!el) {
     alert("Please select an element");
     return;
@@ -741,15 +742,84 @@ const addAsset = async () => {
       case 'animated icons':
         try {
           const selectedItemJSON = JSON.stringify(selectedItem);
-          const file = new File([selectedItemJSON], 'animation.json', {type: 'application/json'});
+          const file = new File([selectedItemJSON], `${selectedItem.nm}-${generateUniqueId()}-animation.json`, {type: 'application/json'});
           const asset = await webflow.createAsset(file);
-
           const assetId = await webflow.getAssetById(asset.id);
           const url = await assetId.getUrl();
-          const childElement = await el.prepend(webflow.elementPresets.Animation);
-          if (childElement.type === 'Animation') {
-            console.log(childElement)
-          }
+
+          const xscpPayload = {
+            "type": "@webflow/XscpData",
+              "payload": {
+            "nodes": [
+              {
+                "_id": generateUniqueId(),
+                "type": "Animation",
+                "tag": "div",
+                "classes": ["animation-style"],
+                "children": [],
+                "data": {
+                  "tag": "div",
+                  "animation": {
+                    "tag": "lottie",
+                    "val": {
+                      "path": {
+                        "src": `${url}`,
+                        "origFileName": `${selectedItem.nm}-${generateUniqueId()}-animation.json`,
+                        "totalDuration": null,
+                      },
+                      "renderMode": "svg",
+                      "loop": false,
+                      "playInReverse": false
+                    }
+                  },
+                  "displayName": `${selectedItem.nm}`,
+                  "attr": {
+                    "id": ""
+                  },
+                  "xattr": [],
+                  "search": {
+                    "exclude": false
+                  },
+                  "visibility": {
+                    "conditions": []
+                  }
+                }
+              }
+            ],
+                "styles": [
+                  {
+                    "_id": 'animation-style',
+                    "fake": false,
+                    "type": "class",
+                    "name": `${selectedItem.nm}`,
+                    "namespace": "",
+                    "comb": "",
+                    "styleLess": "width: 250px; height: 250px;",
+                    "variants": {},
+                    "children": [],
+                    "origin": null,
+                    "selector": null
+                  }
+                ],
+                "assets": [],
+                "ix1": [],
+                "ix2": {
+              "interactions": [],
+                  "events": [],
+                  "actionLists": []
+            }
+          },
+            "meta": {
+            "droppedLinks": 0,
+                "dynBindRemovedCount": 0,
+                "dynListBindRemovedCount": 0,
+                "paginationRemovedCount": 0,
+                "universalBindingsRemovedCount": 0,
+                "unlinkedSymbolCount": 0
+          }};
+
+          // @ts-ignore
+          await webflow._internal.xscp(JSON.stringify(xscpPayload));
 
         }
         catch (error) {
@@ -760,15 +830,16 @@ const addAsset = async () => {
       case 'icons':
       case 'illustrations':
         try {
-
+          const labelElement = await el.append(webflow.elementPresets.DOM);
           const svgContent = selectedItem.toString();
-          const file = new File([svgContent], 'illustration.svg', { type: 'image/svg+xml' });
+          const file = new File([svgContent], `${generateUniqueId()}-illustration.svg`, { type: 'image/svg+xml' });
           const asset = await webflow.createAsset(file);
           const assetId = await webflow.getAssetById(asset.id)
           const url = await assetId.getUrl()
           console.log(`Asset URL: ${url}`)
 
           await labelElement.setTag('img');
+          await labelElement.setAttribute('class', svgName);
           await labelElement.setAttribute('src', url);
           await labelElement.setAttribute('width', '250px');
           await labelElement.setAttribute('height', '250px');
@@ -1161,8 +1232,6 @@ function extractStylesFromSvg(svgElement) {
       if (fillStyles.stroke && fillStyles.stroke !== 'none'){
         setOfColors.add(fillStyles.stroke)
       }
-
-      console.log('colors set', setOfColors)
       classNames.forEach((cls) => {
         stylesByClass[cls] = {
           ...stylesByClass[cls],

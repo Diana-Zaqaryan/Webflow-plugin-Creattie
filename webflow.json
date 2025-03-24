@@ -2,5 +2,8 @@
   "name": "creattie",
   "publicDir": "public",
   "size": "comfortable",
-  "apiVersion": "2"
+  "apiVersion": "2",
+  "featureFlags": {
+    "xscp": true
+  }
 }

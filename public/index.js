@@ -52,6 +52,7 @@ let colorMapping = {};
 let colorPickers = {};
 let updatedJsonData;
 let selectedItem = null;
+let svgName = '';
 const script = document.createElement("script");
 script.src = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js";
 document.addEventListener("DOMContentLoaded", function () {
@@ -201,9 +202,7 @@ function makeApiCalls(token, retries) {
                     page.style.display = 'block';
                     setDisplays(true);
                     setProfileStyles(data.data);
-                    console.log('Data received:', data);
                     localStorage.setItem('token', token);
-                    console.log('Data received:', data);
                     return;
                 }
             }
@@ -566,6 +565,7 @@ function openProductDetailPage(product) {
                         const parser = new DOMParser();
                         const svgDocument = parser.parseFromString(data.data.path, "image/svg+xml");
                         selectedItem = data.data.path;
+                        svgName = data.data.name;
                         const svgElement = svgDocument.documentElement;
                         extractStylesFromSvg(svgElement);
                         container.appendChild(svgElement);
@@ -651,9 +651,11 @@ function getOrCreateStyle(styleName) {
         return newStyle;
     });
 }
+function generateUniqueId() {
+    return crypto.randomUUID();
+}
 const addAsset = () => __awaiter(this, void 0, void 0, function* () {
     const el = yield webflow.getSelectedElement();
-    const labelElement = yield el.before(webflow.elementPresets.DOM);
     const newStyle = yield getOrCreateStyle('elementStyle');
     yield newStyle.setProperties({
         "padding-left": "0 ",
@@ -661,8 +663,6 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
         "padding-top": "0 ",
         "padding-bottom": "0 ",
     });
-    yield el.setStyles([newStyle]);
-    yield labelElement.setStyles([newStyle]);
     if (!el) {
         alert("Please select an element");
         return;
@@ -672,14 +672,83 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
         case 'animated icons':
             try {
                 const selectedItemJSON = JSON.stringify(selectedItem);
-                const file = new File([selectedItemJSON], 'animation.json', { type: 'application/json' });
+                const file = new File([selectedItemJSON], `${selectedItem.nm}-${generateUniqueId()}-animation.json`, { type: 'application/json' });
                 const asset = yield webflow.createAsset(file);
                 const assetId = yield webflow.getAssetById(asset.id);
                 const url = yield assetId.getUrl();
-                const childElement = yield el.prepend(webflow.elementPresets.Animation);
-                if (childElement.type === 'Animation') {
-                    console.log(childElement);
-                }
+                const xscpPayload = {
+                    "type": "@webflow/XscpData",
+                    "payload": {
+                        "nodes": [
+                            {
+                                "_id": generateUniqueId(),
+                                "type": "Animation",
+                                "tag": "div",
+                                "classes": ["animation-style"],
+                                "children": [],
+                                "data": {
+                                    "tag": "div",
+                                    "animation": {
+                                        "tag": "lottie",
+                                        "val": {
+                                            "path": {
+                                                "src": `${url}`,
+                                                "origFileName": `${selectedItem.nm}-${generateUniqueId()}-animation.json`,
+                                                "totalDuration": null,
+                                            },
+                                            "renderMode": "svg",
+                                            "loop": false,
+                                            "playInReverse": false
+                                        }
+                                    },
+                                    "displayName": `${selectedItem.nm}`,
+                                    "attr": {
+                                        "id": ""
+                                    },
+                                    "xattr": [],
+                                    "search": {
+                                        "exclude": false
+                                    },
+                                    "visibility": {
+                                        "conditions": []
+                                    }
+                                }
+                            }
+                        ],
+                        "styles": [
+                            {
+                                "_id": 'animation-style',
+                                "fake": false,
+                                "type": "class",
+                                "name": `${selectedItem.nm}`,
+                                "namespace": "",
+                                "comb": "",
+                                "styleLess": "width: 250px; height: 250px;",
+                                "variants": {},
+                                "children": [],
+                                "origin": null,
+                                "selector": null
+                            }
+                        ],
+                        "assets": [],
+                        "ix1": [],
+                        "ix2": {
+                            "interactions": [],
+                            "events": [],
+                            "actionLists": []
+                        }
+                    },
+                    "meta": {
+                        "droppedLinks": 0,
+                        "dynBindRemovedCount": 0,
+                        "dynListBindRemovedCount": 0,
+                        "paginationRemovedCount": 0,
+                        "universalBindingsRemovedCount": 0,
+                        "unlinkedSymbolCount": 0
+                    }
+                };
+                // @ts-ignore
+                yield webflow._internal.xscp(JSON.stringify(xscpPayload));
             }
             catch (error) {
                 console.error("Error loading Lottie animation:", error);
@@ -688,13 +757,15 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
         case 'icons':
         case 'illustrations':
             try {
+                const labelElement = yield el.append(webflow.elementPresets.DOM);
                 const svgContent = selectedItem.toString();
-                const file = new File([svgContent], 'illustration.svg', { type: 'image/svg+xml' });
+                const file = new File([svgContent], `${generateUniqueId()}-illustration.svg`, { type: 'image/svg+xml' });
                 const asset = yield webflow.createAsset(file);
                 const assetId = yield webflow.getAssetById(asset.id);
                 const url = yield assetId.getUrl();
                 console.log(`Asset URL: ${url}`);
                 yield labelElement.setTag('img');
+                yield labelElement.setAttribute('class', svgName);
                 yield labelElement.setAttribute('src', url);
                 yield labelElement.setAttribute('width', '250px');
                 yield labelElement.setAttribute('height', '250px');
@@ -1044,7 +1115,6 @@ function extractStylesFromSvg(svgElement) {
             if (fillStyles.stroke && fillStyles.stroke !== 'none') {
                 setOfColors.add(fillStyles.stroke);
             }
-            console.log('colors set', setOfColors);
             classNames.forEach((cls) => {
                 stylesByClass[cls] = Object.assign(Object.assign(Object.assign({}, stylesByClass[cls]), fillStyles), strokeStyles);
             });
