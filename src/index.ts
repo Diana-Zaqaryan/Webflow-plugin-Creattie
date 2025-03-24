@@ -966,7 +966,10 @@ function extractLayersAndColors(data) {
           if (shape.it) {
             shape.it.forEach(shapeItem => {
               if (shapeItem.ty === "st" || shapeItem.ty === "fl") {
-                const color = shapeItem.c.k;
+                let color =''
+                shapeItem.c.k.forEach(item => {
+                  color = item.hasOwnProperty('s') ? item.s : shapeItem.c.k;
+                })
                   colorMapping[layerName] = color;
                   extractedData.push({
                     layer: layer.nm,
@@ -977,7 +980,10 @@ function extractLayersAndColors(data) {
               if (shapeItem.it) {
                 shapeItem.it.forEach (s => {
                   if (s.ty === "st" || s.ty === "fl") {
-                    const color = s.c.k;
+                    let color =''
+                    s.c.k.forEach(item => {
+                      color = item.hasOwnProperty('s') ? item.s : s.c.k;
+                    })
                     colorMapping[layerName] = color;
                     extractedData.push({
                       layer: layer.nm,
@@ -1132,9 +1138,18 @@ function updateAnimationColor(newColor, previousColor) {
   function findAndUpdateColors(shapes) {
     shapes.forEach(shape => {
       if (shape.ty === "st" || shape.ty === "fl") {
-        const currentColor = rgbaToHex(shape.c.k);
+        let currentColor = ''
+        shape.c.k.forEach(item =>{
+          currentColor = item.hasOwnProperty('s') ? rgbaToHex(shape.c.k[0].s) : rgbaToHex(shape.c.k)
+        })
         if (currentColor === previousColor) {
-          shape.c.k = hexToRgba(newColor);
+          shape.c.k.forEach(item => {
+            if (item.hasOwnProperty('s')) {
+              item.s = hexToRgba(newColor)
+            } else {
+              shape.c.k = hexToRgba(newColor)
+            }
+          } )
         }
       }
       if (shape.it) {
