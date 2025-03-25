@@ -699,7 +699,7 @@ function initLottieAnimation(updatedJsonData) {
     animationData: updatedJsonData
   });
   selectedItem = updatedJsonData
-  animation.setSpeed(2);
+  animation.setSpeed(1);
 }
 
 

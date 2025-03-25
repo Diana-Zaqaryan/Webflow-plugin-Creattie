@@ -633,7 +633,7 @@ function initLottieAnimation(updatedJsonData) {
         animationData: updatedJsonData
     });
     selectedItem = updatedJsonData;
-    animation.setSpeed(2);
+    animation.setSpeed(1);
 }
 function getOrCreateStyle(styleName) {
     return __awaiter(this, void 0, void 0, function* () {
