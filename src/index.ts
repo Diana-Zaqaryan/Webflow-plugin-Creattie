@@ -44,7 +44,6 @@ const container = document.getElementById("color-container");
 const dataContainerInFavorites = document.getElementById('data-container-in-favorites')
 
 declare var lottie: any;
-declare var bodymovin: any
 let animation;
 let originalJsonData;
 let colorMapping = {};
@@ -59,31 +58,28 @@ const enum CATEGORIES {
    ICON_ID = 4,
 }
 
-const script = document.createElement("script");
-script.src = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js";
-
-
 document.addEventListener("DOMContentLoaded", function() {
   const assetsDropdown: any = document.getElementById('assets');
+  assetsDropdown.value = 'animated';
+
   loading.style.display= 'none';
   loadingInDetails.style.display = 'none';
   productDetails.style.display = 'none';
-  favorites.style.display = 'none'
-  notFound.style.display = 'none'
-  setNotFoundDisplays(true)
+  favorites.style.display = 'none';
+  notFound.style.display = 'none';
+  dataContainerInFavorites.style.display = 'none';
+  document.getElementById('select-img').style.display = 'none';
+
+  setNotFoundDisplays(true);
   page.style.display = 'block';
   products.style.display = 'block'
-  assetsDropdown.value = 'animated';
-  dataContainerInFavorites.style.display = 'none'
   fetchByCategory('animated', style, '');
-  document.getElementById('select-img').style.display = 'none';
   const token = localStorage.getItem('token');
   setDisplays(false);
   if (token) {
     void makeApiCalls(token, 1);
     setDisplays(true)
   }
-
   const modal = document.getElementById("login-modal");
   modal.style.display = 'none'
 });
@@ -113,7 +109,6 @@ document.getElementById('assets').addEventListener('change', (event: any) => {
   selectedCategory = event.target.value;
   style = ''
   fetchByCategory(selectedCategory, style, searchText);
-  // resetSearchValue()
   resetSelectedStyle();
 });
 
@@ -121,7 +116,6 @@ document.getElementById('assetsOfFavorites').addEventListener('change', (event: 
   const category  = +event.target.value;
   style = ''
   fetchFavorites(category);
-  // resetSearchValue()
   resetSelectedStyle();
   switch (category){
     case 1: selectedCategory == 'animated'
@@ -142,8 +136,8 @@ document.getElementById('search').addEventListener('input', function(event:any) 
 
 document.getElementById('login').addEventListener('click', () =>{
     const newToke = naiveId();
-    localStorage.setItem('token', newToke)
-    const url = `https://creattie.com/?webflow-token=${newToke}`
+    localStorage.setItem('token', newToke);
+    const url = `https://creattie.com/?webflow-token=${newToke}`;
     window.open(url, '_blank');
     void makeApiCalls(newToke, 20).then(r => {return r});
     goBack()
@@ -151,10 +145,10 @@ document.getElementById('login').addEventListener('click', () =>{
 
 document.getElementById('logout').addEventListener('click', () =>{
   localStorage.removeItem('token');
-  localStorage.removeItem('user')
-  void makeApiCalls(localStorage.getItem('token'), 1)
-  goBack()
-  setDisplays(false)
+  localStorage.removeItem('user');
+  void makeApiCalls(localStorage.getItem('token'), 1);
+  goBack();
+  setDisplays(false);
 })
 
 function delay(ms: number) {
@@ -166,23 +160,23 @@ function setDisplays (isAuth: boolean) {
     notAuthProfile.style.display = 'none';
     authProfile.style.display = 'block';
     document.getElementById('login').style.display = 'none';
-    document.getElementById('info').style.display = 'block'
+    document.getElementById('info').style.display = 'block';
     return
   }
   notAuthProfile.style.display = 'block';
   authProfile.style.display = 'none';
-  document.getElementById('login').style.display = 'block'
-  document.getElementById('info').style.display = 'none'
+  document.getElementById('login').style.display = 'block';
+  document.getElementById('info').style.display = 'none';
 }
 
 function setNotFoundDisplays (isFound :boolean) {
   if (isFound) {
     notFound.style.display = 'none';
-    document.getElementById('navigation-buttons').style.display = 'flex'
+    document.getElementById('navigation-buttons').style.display = 'flex';
     return
   }
   notFound.style.display = 'block';
-  document.getElementById('navigation-buttons').style.display = 'none'
+  document.getElementById('navigation-buttons').style.display = 'none';
 }
 
 
@@ -198,7 +192,7 @@ function getRandomColor() {
 
 async function makeApiCalls(token: string, retries: number) {
   loading.style.display= 'block';
-  page.style.display = 'none'
+  page.style.display = 'none';
   let attempt = 0;
   const url = 'https://creattie.com/api/get-user';
 
@@ -223,7 +217,7 @@ async function makeApiCalls(token: string, retries: number) {
         const data = await response.json();
         loading.style.display= 'none';
         page.style.display = 'block';
-        setDisplays(true)
+        setDisplays(true);
         setProfileStyles(data.data);
         localStorage.setItem('token', token);
         return;
@@ -233,38 +227,24 @@ async function makeApiCalls(token: string, retries: number) {
       return;
     }
   }
-  page.style.display = 'block'
-  loading.style.display = 'none'
+  page.style.display = 'block';
+  loading.style.display = 'none';
   console.error('Error: 401 Unauthorized - Max retries reached.');
 }
 
 function setProfileStyles(user) {
-  authProfile.style.backgroundColor = getRandomColor()
-  authProfile.innerHTML = user.name.slice(0,1)
+  authProfile.style.backgroundColor = getRandomColor();
+  authProfile.innerHTML = user.name.slice(0,1);
 }
 
-// function resetSearchValue () {
-//   const search: any = document.getElementById('search')
-//   search.value =''
-// }
 
-// function handleSelectionChange() {
-//   const select: any = document.getElementById('selection');
-//   const selectedValue = select.value;
-//   if (selectedValue === 'login') {
-//     const token = localStorage.getItem('token')
-//     const url = `https://creattie.com/?webflow-token=${token}`
-//     window.open(url, '_blank');
-//     makeApiCalls(token)
-//   }
-// }
 
 function naiveId() {
   return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
 function handleSelectionChangeInMain() {
-  currentPage = 1
+  currentPage = 1;
 }
 
 function fetchByCategory (category: string, style: string, filteredText?: string) {
@@ -273,7 +253,7 @@ function fetchByCategory (category: string, style: string, filteredText?: string
   switch (category) {
     case 'animated':
       url = `https://creattie.com/api/filter?search=${filteredText}&category=lottie-animated-illustrations&isCollection=0&isPeople=0&plan=all&tags=&styles=${style}&orderBy=order&page=${currentPage}`;
-      fetchAnimatedIllustrations(url)
+      fetchAnimatedIllustrations(url);
       break;
     case 'illustrations':
       url = `https://creattie.com/api/filter?search=${filteredText}&category=illustrations&isCollection=0&isPeople=0&plan=all&tags=&styles=${style}&orderBy=order&page=${currentPage}`;
@@ -281,7 +261,7 @@ function fetchByCategory (category: string, style: string, filteredText?: string
       break;
     case 'animated icons':
       url = `https://creattie.com/api/filter?search=${filteredText}&category=lottie-animated-icons&isCollection=0&isPeople=0&plan=all&tags=&styles=${style}&orderBy=order&page=${currentPage}`;
-      fetchAnimatedIllustrations(url)
+      fetchAnimatedIllustrations(url);
       break;
     case 'icons':
       url = `https://creattie.com/api/filter?search=${filteredText}&category=icons&isCollection=0&isPeople=0&plan=all&tags=&styles=${style}&orderBy=order&page=${currentPage}`;
@@ -300,11 +280,11 @@ function fetchFavorites (category: number) {
   switch (category) {
     case CATEGORIES.ANIMATED_ILLUSTRATION_ID:
     case CATEGORIES.ANIMATED_ICON_ID:
-      fetchAnimatedFavoriteData(url)
+      fetchAnimatedFavoriteData(url);
       break;
     case CATEGORIES.ICON_ID:
     case CATEGORIES.ILLUSTRATION_ID:
-      fetchDataForFavorites(url)
+      fetchDataForFavorites(url);
       break;
   }
 
@@ -316,7 +296,7 @@ function fetchAnimatedIllustrations(url: string) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
-      document.getElementById('main-content').style.display = 'none'
+      document.getElementById('main-content').style.display = 'none';
       const response = yield fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -339,7 +319,7 @@ function fetchAnimatedIllustrations(url: string) {
           video.appendChild(source);
           productDiv.appendChild(video)
           productDiv.addEventListener('click', function() {
-            openProductDetailPage(product)
+            openProductDetailPage(product);
           });
           dataContainer.appendChild(productDiv);
         }
@@ -348,7 +328,7 @@ function fetchAnimatedIllustrations(url: string) {
       !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
       setTimeout(() => {
         document.getElementById('loading-indicator').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block'
+        document.getElementById('main-content').style.display = 'block';
       }, 1000)
     }
     catch (error) {
@@ -369,7 +349,7 @@ function fetchData(url: string) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
-      document.getElementById('main-content').style.display = 'none'
+      document.getElementById('main-content').style.display = 'none';
       const response = yield fetch(url);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -403,10 +383,10 @@ function fetchData(url: string) {
         dataContainer.appendChild(productDiv);
         setTimeout(() => {
           document.getElementById('loading-indicator').style.display = 'none';
-          document.getElementById('main-content').style.display = 'block'
+          document.getElementById('main-content').style.display = 'block';
         }, 1000)
       });
-      !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
+      !data.products.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true);
     }
     catch (error) {
       console.error('Error fetching data: ', error);
@@ -418,8 +398,8 @@ function fetchData(url: string) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
-      document.getElementById('main-content').style.display = 'none'
-      const token = localStorage.getItem('token')
+      document.getElementById('main-content').style.display = 'none';
+      const token = localStorage.getItem('token');
       const response = yield fetch(url, {
         method: 'GET',
         headers: {
@@ -446,19 +426,19 @@ function fetchData(url: string) {
           source.setAttribute('src', product.videoPath);
           source.setAttribute('type', 'video/mp4');
           video.appendChild(source);
-          productDiv.appendChild(video)
+          productDiv.appendChild(video);
           productDiv.addEventListener('click', function () {
-            openProductDetailPage(product)
+            openProductDetailPage(product);
           });
           dataContainer.appendChild(productDiv);
         }
         return product
       });
-      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
+      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true);
 
       setTimeout(() => {
         document.getElementById('loading-indicator').style.display = 'none';
-        document.getElementById('main-content').style.display = 'block'
+        document.getElementById('main-content').style.display = 'block';
       },1000)
 
     } catch (error) {
@@ -471,9 +451,9 @@ function fetchDataForFavorites (url) {
   return __awaiter(this, void 0, void 0, function* () {
     try {
       document.getElementById('loading-indicator').style.display = 'block';
-      document.getElementById('main-content').style.display = 'none'
+      document.getElementById('main-content').style.display = 'none';
 
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('token');
       const response = yield fetch(url, {
         method: 'GET',
         headers: {
@@ -508,17 +488,17 @@ function fetchDataForFavorites (url) {
         picture.appendChild(img);
         productDiv.appendChild(picture);
         productDiv.addEventListener('click', function() {
-          openProductDetailPage(product)
+          openProductDetailPage(product);
         });
         dataContainer.appendChild(productDiv);
 
         setTimeout(() =>{
           document.getElementById('loading-indicator').style.display = 'none';
-          document.getElementById('main-content').style.display = 'block'
+          document.getElementById('main-content').style.display = 'block';
         }, 1000)
 
       });
-      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true)
+      !data.wishList.length ? setNotFoundDisplays(false) : setNotFoundDisplays(true);
     }
     catch (error) {
       console.error('Error fetching data: ', error);
@@ -529,20 +509,20 @@ function fetchDataForFavorites (url) {
 
 function goBack() {
   productDetails.style.display = 'none';
-  favorites.style.display = 'none'
+  favorites.style.display = 'none';
   products.style.display = 'block';
-  resetColorMappings()
+  resetColorMappings();
 }
 
 function resetColorMappings() {
-  container.innerHTML = ''
+  container.innerHTML = '';
   colorMapping = {};
-  colorPickers = {}
+  colorPickers = {};
 }
 async function openProductDetailPage(product) {
   loadingInDetails.style.display = 'block';
   document.getElementById('wrapper').style.display = 'none';
-  document.getElementById('back-button').style.display = 'none'
+  document.getElementById('back-button').style.display = 'none';
   document.getElementById('lottie-container').style.display = 'flex';
   document.getElementById('add').style.display = 'block';
   resetColorMappings();
@@ -557,7 +537,7 @@ async function openProductDetailPage(product) {
   products.style.display = 'none';
   favorites.style.display = 'none';
   const loginModal = document.getElementById("login-modal");
-  loginModal.style.display = 'none'
+  loginModal.style.display = 'none';
 
 
   try {
@@ -625,7 +605,7 @@ async function openProductDetailPage(product) {
           selectedItem = data.data.path;
           svgName = data.data.name;
           const svgElement = svgDocument.documentElement;
-          extractStylesFromSvg(svgElement)
+          extractStylesFromSvg(svgElement);
           container.appendChild(svgElement);
         }
         break;
@@ -638,11 +618,11 @@ async function openProductDetailPage(product) {
     setTimeout(() => {
       loadingInDetails.style.display= 'none';
       document.getElementById('wrapper').style.display = 'block';
-      document.getElementById('back-button').style.display = 'block'
+      document.getElementById('back-button').style.display = 'block';
     }, 800)
   } catch (error) {
     document.getElementById('lottie-container').style.display = 'none';
-    document.getElementById('back-button').style.display = 'block'
+    document.getElementById('back-button').style.display = 'block';
     const container = document.getElementById('color-container');
     container.classList.add('disabled');
 
@@ -669,8 +649,8 @@ async function openProductDetailPage(product) {
 
 function showModal(userLoggedIn, hasPermission) {
   const modalMessage = document.getElementById('modal-message');
-  document.getElementById('wrapper').style.display = 'none'
-  loadingInDetails.style.display = 'none'
+  document.getElementById('wrapper').style.display = 'none';
+  loadingInDetails.style.display = 'none';
   if (!userLoggedIn) {
     modalMessage.innerText = "You must be logged in to perform this action. Please log in.";
   } else if (!hasPermission) {
@@ -698,7 +678,7 @@ function initLottieAnimation(updatedJsonData) {
     autoplay: true,
     animationData: updatedJsonData
   });
-  selectedItem = updatedJsonData
+  selectedItem = updatedJsonData;
   animation.setSpeed(1);
 }
 
@@ -834,9 +814,8 @@ const addAsset = async () => {
           const svgContent = selectedItem.toString();
           const file = new File([svgContent], `${generateUniqueId()}-illustration.svg`, { type: 'image/svg+xml' });
           const asset = await webflow.createAsset(file);
-          const assetId = await webflow.getAssetById(asset.id)
-          const url = await assetId.getUrl()
-          console.log(`Asset URL: ${url}`)
+          const assetId = await webflow.getAssetById(asset.id);
+          const url = await assetId.getUrl();
 
           await labelElement.setTag('img');
           await labelElement.setAttribute('class', svgName);
@@ -895,7 +874,6 @@ function populateStylesDropdown(stylesData) {
       document.querySelector('.custom-select').classList.remove('open');
       style = selectedStyle;
       fetchByCategory(selectedCategory, style, searchText);
-      // resetSearchValue()
     });
   });
 
@@ -936,15 +914,10 @@ function fetchStyles(category) {
 function openFavoritsPage() {
   favorites.style.display = 'flex';
   products.style.display = 'none';
-  productDetails.style.display = 'none'
-  dataContainerInFavorites.style.display = 'grid'
-  fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1')
+  productDetails.style.display = 'none';
+  dataContainerInFavorites.style.display = 'grid';
+  fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1');
 }
-
-
-
-
-/*  Animation part*/
 
 
 function extractLayersAndColors(data) {
@@ -1038,10 +1011,10 @@ function rgbaToHex(rgba) {
 
 function displayColors(color, svg?) {
   if (color === '#fff') {
-    color = '#ffffff'
+    color = '#ffffff';
   }
   if (color === '#000') {
-    color = '#000000'
+    color = '#000000';
   }
   const colorPickerItem = document.createElement("div");
   colorPickerItem.classList.add("color-picker-item");
@@ -1062,7 +1035,7 @@ function displayColors(color, svg?) {
 
       case 'icons':
       case 'illustrations':
-        updateIllustrationColor(newColor, colorPickers[color].originalColor, svg)
+        updateIllustrationColor(newColor, colorPickers[color].originalColor, svg);
         break;
 
       default:
@@ -1085,7 +1058,7 @@ function updateIllustrationColor(newColor, previousColor, svgElement) {
       const computedStyle = window.getComputedStyle(el);
       const currentFillColor = rgbToHex(computedStyle.fill);
       const currentStrokeColor = rgbToHex(computedStyle.stroke);
-      const currentStopColor = el.getAttribute('stop-color')
+      const currentStopColor = el.getAttribute('stop-color');
       if (currentFillColor === previousColor) {
         el.style.fill = newColor;
       }
@@ -1093,7 +1066,7 @@ function updateIllustrationColor(newColor, previousColor, svgElement) {
         el.style.stroke = newColor;
       }
       if (currentStopColor === previousColor) {
-        el.setAttribute('stop-color', newColor)
+        el.setAttribute('stop-color', newColor);
       }
 
     });
@@ -1113,7 +1086,7 @@ function updateIllustrationColor(newColor, previousColor, svgElement) {
         }
       });
     })
-    selectedItem = serializeSvgToString(svgElement)
+    selectedItem = serializeSvgToString(svgElement);
   });
 
   console.log(`Updated color from ${previousColor} to ${newColor}`);
@@ -1133,21 +1106,19 @@ function rgbToHex(rgb) {
 }
 
 function updateAnimationColor(newColor, previousColor) {
-  console.log(newColor, previousColor)
-
   function findAndUpdateColors(shapes) {
     shapes.forEach(shape => {
       if (shape.ty === "st" || shape.ty === "fl") {
         let currentColor = ''
         shape.c.k.forEach(item =>{
-          currentColor = item.hasOwnProperty('s') ? rgbaToHex(shape.c.k[0].s) : rgbaToHex(shape.c.k)
+          currentColor = item.hasOwnProperty('s') ? rgbaToHex(shape.c.k[0].s) : rgbaToHex(shape.c.k);
         })
         if (currentColor === previousColor) {
           shape.c.k.forEach(item => {
             if (item.hasOwnProperty('s')) {
-              item.s = hexToRgba(newColor)
+              item.s = hexToRgba(newColor);
             } else {
-              shape.c.k = hexToRgba(newColor)
+              shape.c.k = hexToRgba(newColor);
             }
           } )
         }
@@ -1166,6 +1137,12 @@ function updateAnimationColor(newColor, previousColor) {
       if (layer.layers) {
         layer.layers.forEach(layer =>{
           if (layer.shapes) findAndUpdateColors(layer.shapes);
+          if (layer.layers) {
+            layer.layers.forEach(l => {
+              if (l.shapes)
+              findAndUpdateColors(l.shapes)
+            })
+          }
         })
       }
     });
@@ -1198,7 +1175,7 @@ function extractStylesFromSvg(svgElement) {
   const setOfColors = new Set;
   const elements = svgElement.querySelectorAll('*');
   elements.forEach(element => {
-    let stylesArr
+    let stylesArr =[];
     const styles = element.getAttribute('style')
     if (styles) {
       stylesArr = styles.split(';')
@@ -1214,7 +1191,7 @@ function extractStylesFromSvg(svgElement) {
       });
     }
   });
-  setOfColors.forEach(color => displayColors(color, svgElement))
+  // setOfColors.forEach(color => displayColors(color, svgElement))
 
   const styleElement = svgElement.querySelector('style');
   if (styleElement) {
@@ -1242,10 +1219,10 @@ function extractStylesFromSvg(svgElement) {
       const strokeStyles = parseStyle(item.strokeColor);
 
       if (fillStyles.fill && fillStyles.fill !== 'none') {
-        setOfColors.add(fillStyles.fill)
+        setOfColors.add(fillStyles.fill);
       }
       if (fillStyles.stroke && fillStyles.stroke !== 'none'){
-        setOfColors.add(fillStyles.stroke)
+        setOfColors.add(fillStyles.stroke);
       }
       classNames.forEach((cls) => {
         stylesByClass[cls] = {
@@ -1259,18 +1236,20 @@ function extractStylesFromSvg(svgElement) {
     const gradientElements = svgElement.querySelectorAll('stop');
     if (gradientElements.length) {
       gradientElements.forEach(gradientElement => {
-        const stopcolor = gradientElement.getAttribute('stop-color')
-        setOfColors.add(stopcolor)
+        const stopColor = gradientElement.getAttribute('stop-color');
+        setOfColors.add(stopColor);
       })
 
     }
-    const colors  = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item as string));
 
-    colors.forEach(color => displayColors(color, svgElement))
   } else {
+    if (setOfColors.size === 0) {
+      setOfColors.add('#000000');
+    }
     console.log('No style element found.');
   }
-
+  const colors  = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item as string));
+  colors.forEach(color => displayColors(color, svgElement));
   return styles;
 }
 

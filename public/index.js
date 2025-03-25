@@ -53,22 +53,20 @@ let colorPickers = {};
 let updatedJsonData;
 let selectedItem = null;
 let svgName = '';
-const script = document.createElement("script");
-script.src = "https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.7.6/lottie.min.js";
 document.addEventListener("DOMContentLoaded", function () {
     const assetsDropdown = document.getElementById('assets');
+    assetsDropdown.value = 'animated';
     loading.style.display = 'none';
     loadingInDetails.style.display = 'none';
     productDetails.style.display = 'none';
     favorites.style.display = 'none';
     notFound.style.display = 'none';
+    dataContainerInFavorites.style.display = 'none';
+    document.getElementById('select-img').style.display = 'none';
     setNotFoundDisplays(true);
     page.style.display = 'block';
     products.style.display = 'block';
-    assetsDropdown.value = 'animated';
-    dataContainerInFavorites.style.display = 'none';
     fetchByCategory('animated', style, '');
-    document.getElementById('select-img').style.display = 'none';
     const token = localStorage.getItem('token');
     setDisplays(false);
     if (token) {
@@ -98,14 +96,12 @@ document.getElementById('assets').addEventListener('change', (event) => {
     selectedCategory = event.target.value;
     style = '';
     fetchByCategory(selectedCategory, style, searchText);
-    // resetSearchValue()
     resetSelectedStyle();
 });
 document.getElementById('assetsOfFavorites').addEventListener('change', (event) => {
     const category = +event.target.value;
     style = '';
     fetchFavorites(category);
-    // resetSearchValue()
     resetSelectedStyle();
     switch (category) {
         case 1:
@@ -220,20 +216,6 @@ function setProfileStyles(user) {
     authProfile.style.backgroundColor = getRandomColor();
     authProfile.innerHTML = user.name.slice(0, 1);
 }
-// function resetSearchValue () {
-//   const search: any = document.getElementById('search')
-//   search.value =''
-// }
-// function handleSelectionChange() {
-//   const select: any = document.getElementById('selection');
-//   const selectedValue = select.value;
-//   if (selectedValue === 'login') {
-//     const token = localStorage.getItem('token')
-//     const url = `https://creattie.com/?webflow-token=${token}`
-//     window.open(url, '_blank');
-//     makeApiCalls(token)
-//   }
-// }
 function naiveId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
@@ -763,7 +745,6 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
                 const asset = yield webflow.createAsset(file);
                 const assetId = yield webflow.getAssetById(asset.id);
                 const url = yield assetId.getUrl();
-                console.log(`Asset URL: ${url}`);
                 yield labelElement.setTag('img');
                 yield labelElement.setAttribute('class', svgName);
                 yield labelElement.setAttribute('src', url);
@@ -816,7 +797,6 @@ function populateStylesDropdown(stylesData) {
             document.querySelector('.custom-select').classList.remove('open');
             style = selectedStyle;
             fetchByCategory(selectedCategory, style, searchText);
-            // resetSearchValue()
         });
     });
 }
@@ -855,7 +835,6 @@ function openFavoritsPage() {
     dataContainerInFavorites.style.display = 'grid';
     fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1');
 }
-/*  Animation part*/
 function extractLayersAndColors(data) {
     const extractedData = [];
     function extractLayerColors(layers) {
@@ -1026,7 +1005,6 @@ function rgbToHex(rgb) {
         .join("")}`;
 }
 function updateAnimationColor(newColor, previousColor) {
-    console.log(newColor, previousColor);
     function findAndUpdateColors(shapes) {
         shapes.forEach(shape => {
             if (shape.ty === "st" || shape.ty === "fl") {
@@ -1059,6 +1037,12 @@ function updateAnimationColor(newColor, previousColor) {
                 layer.layers.forEach(layer => {
                     if (layer.shapes)
                         findAndUpdateColors(layer.shapes);
+                    if (layer.layers) {
+                        layer.layers.forEach(l => {
+                            if (l.shapes)
+                                findAndUpdateColors(l.shapes);
+                        });
+                    }
                 });
             }
         });
@@ -1087,7 +1071,7 @@ function extractStylesFromSvg(svgElement) {
     const setOfColors = new Set;
     const elements = svgElement.querySelectorAll('*');
     elements.forEach(element => {
-        let stylesArr;
+        let stylesArr = [];
         const styles = element.getAttribute('style');
         if (styles) {
             stylesArr = styles.split(';');
@@ -1103,7 +1087,7 @@ function extractStylesFromSvg(svgElement) {
             });
         }
     });
-    setOfColors.forEach(color => displayColors(color, svgElement));
+    // setOfColors.forEach(color => displayColors(color, svgElement))
     const styleElement = svgElement.querySelector('style');
     if (styleElement) {
         const styles = styleElement.textContent || styleElement.innerText;
@@ -1138,16 +1122,19 @@ function extractStylesFromSvg(svgElement) {
         const gradientElements = svgElement.querySelectorAll('stop');
         if (gradientElements.length) {
             gradientElements.forEach(gradientElement => {
-                const stopcolor = gradientElement.getAttribute('stop-color');
-                setOfColors.add(stopcolor);
+                const stopColor = gradientElement.getAttribute('stop-color');
+                setOfColors.add(stopColor);
             });
         }
-        const colors = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item));
-        colors.forEach(color => displayColors(color, svgElement));
     }
     else {
+        if (setOfColors.size === 0) {
+            setOfColors.add('#000000');
+        }
         console.log('No style element found.');
     }
+    const colors = Array.from(setOfColors).filter(item => /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(item));
+    colors.forEach(color => displayColors(color, svgElement));
     return styles;
 }
 function parseStyle(styleString) {
