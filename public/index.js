@@ -480,6 +480,7 @@ function openProductDetailPage(product) {
         document.getElementById('back-button').style.display = 'none';
         document.getElementById('lottie-container').style.display = 'flex';
         document.getElementById('add').style.display = 'block';
+        const titel = document.createElement('h4');
         resetColorMappings();
         sessionStorage.setItem('productDetails', JSON.stringify(product));
         if (!productDetails || !products) {
@@ -525,11 +526,12 @@ function openProductDetailPage(product) {
                         document.getElementById('color-container').classList.remove('disabled');
                         yield fetchLottieJson(data.data.path).then(jsonData => {
                             originalJsonData = jsonData;
-                            console.log(jsonData);
                             initLottieAnimation(jsonData);
                             updatedJsonData = JSON.parse(JSON.stringify(originalJsonData));
                             resetColorMappings();
                             extractLayersAndColors(jsonData);
+                            titel.innerHTML = data.data.name;
+                            container.prepend(titel);
                         });
                     }
                     break;
@@ -549,7 +551,9 @@ function openProductDetailPage(product) {
                         selectedItem = data.data.path;
                         svgName = data.data.name;
                         const svgElement = svgDocument.documentElement;
+                        titel.innerHTML = (svgName);
                         extractStylesFromSvg(svgElement);
+                        container.appendChild(titel);
                         container.appendChild(svgElement);
                     }
                     break;

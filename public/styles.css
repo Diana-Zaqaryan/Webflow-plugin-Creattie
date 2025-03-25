@@ -202,8 +202,10 @@ video {
   display: flex;
   font-size: 1em;
   align-items: center;
-  padding: 0 10px;
   font-weight: 100;
+}
+.button-wrapper i {
+  padding: 3.5px 7px 3.5px 0;
 }
 
 #add{
@@ -212,25 +214,7 @@ video {
 
 .button-wrapper button:hover {
   color: #4688cf;
-}
-
-.button-wrapper button:after ,.button-wrapper button:before{
-  border-right: 2px solid;
-  content: '';
-  display: block;
-  height: 8px;
-  margin-top: -6px;
-  position: absolute;
-
-  transform: rotate(60deg);
-  left: 4%;
-  top: 50%;
-  width: 0;
-}
-
-.button-wrapper button:after {
-  margin-top: -2px;
-  transform: rotate(125deg);
+  cursor: pointer;
 }
 
 #add {
@@ -241,8 +225,6 @@ video {
   padding: 4px;
   border-radius: 4px;
 }
-
-
 
 
 /*   Loading */
@@ -1087,8 +1069,19 @@ video {
   font-size: 24px;
 }
 
+#lottie-container {
+  flex-direction: column;
+  margin: 0  auto 1em;
+  align-items: center;
+}
 #lottie-container svg {
-  width: 100%;
+  width: 90% !important;
+  margin: 5px auto;
+  border-radius: 10px;
+}
+
+#lottie-container h4 {
+  margin: 0 1em;
 }
 
 .favorites-wrapper{

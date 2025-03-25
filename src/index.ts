@@ -41,7 +41,7 @@ const notAuthProfile  = document.getElementById('no-auth-profile');
 const authProfile = document.getElementById('auth-profile')
 const notFound = document.getElementById('not-found');
 const container = document.getElementById("color-container");
-const dataContainerInFavorites = document.getElementById('data-container-in-favorites')
+const dataContainerInFavorites = document.getElementById('data-container-in-favorites');
 
 declare var lottie: any;
 let animation;
@@ -525,6 +525,7 @@ async function openProductDetailPage(product) {
   document.getElementById('back-button').style.display = 'none';
   document.getElementById('lottie-container').style.display = 'flex';
   document.getElementById('add').style.display = 'block';
+  const titel = document.createElement('h4')
   resetColorMappings();
   sessionStorage.setItem('productDetails', JSON.stringify(product));
 
@@ -580,11 +581,12 @@ async function openProductDetailPage(product) {
           document.getElementById('color-container').classList.remove('disabled');
           await fetchLottieJson(data.data.path).then(jsonData => {
             originalJsonData = jsonData;
-            console.log(jsonData)
             initLottieAnimation(jsonData);
             updatedJsonData = JSON.parse(JSON.stringify(originalJsonData));
             resetColorMappings();
             extractLayersAndColors(jsonData);
+            titel.innerHTML = data.data.name;
+            container.prepend(titel);
           });
         }
         break;
@@ -605,7 +607,9 @@ async function openProductDetailPage(product) {
           selectedItem = data.data.path;
           svgName = data.data.name;
           const svgElement = svgDocument.documentElement;
+          titel.innerHTML = (svgName)
           extractStylesFromSvg(svgElement);
+          container.appendChild(titel)
           container.appendChild(svgElement);
         }
         break;
