@@ -99,22 +99,25 @@ document.getElementById('assets').addEventListener('change', (event) => {
     resetSelectedStyle();
 });
 document.getElementById('assetsOfFavorites').addEventListener('change', (event) => {
-    const category = +event.target.value;
+    const category = +event.target.value || 1;
     style = '';
     fetchFavorites(category);
     resetSelectedStyle();
     switch (category) {
         case 1:
-            selectedCategory == 'animated';
+            selectedCategory = 'animated';
             break;
         case 2:
-            selectedCategory == 'illustrations';
+            selectedCategory = 'illustrations';
             break;
         case 3:
-            selectedCategory == 'animated icons';
+            selectedCategory = 'animated icons';
             break;
-        case 4: selectedCategory == 'icons';
+        case 4: selectedCategory = 'icons';
     }
+});
+document.getElementById('assetsOfFavorites').addEventListener('loadeddata', (event) => {
+    console.log('mtav');
 });
 document.getElementById('search').addEventListener('input', function (event) {
     const searchQuery = event.target.value.trim();
@@ -462,10 +465,24 @@ function fetchDataForFavorites(url) {
         }
     });
 }
+function changeAssetsValue(newValue) {
+    const selectElement = document.getElementById("assets");
+    selectElement.value = newValue;
+    selectElement.dispatchEvent(new Event("change"));
+}
 function goBack() {
     productDetails.style.display = 'none';
     favorites.style.display = 'none';
     products.style.display = 'block';
+    fetchByCategory(selectedCategory, '', searchText);
+    changeAssetsValue(selectedCategory);
+    resetColorMappings();
+}
+function goBackFromFavorites() {
+    productDetails.style.display = 'none';
+    favorites.style.display = 'none';
+    products.style.display = 'block';
+    fetchByCategory(selectedCategory, '', searchText);
     resetColorMappings();
 }
 function resetColorMappings() {
@@ -769,7 +786,7 @@ function populateStylesDropdown(stylesData) {
     allOption.setAttribute('data-value', '');
     allOption.setAttribute('selected', 'selected');
     allOption.innerHTML = `
-    <img src="assets/ALL.svg" alt="all styles" />
+    <img src="assets/ALL.png" alt="all styles" />
     <span>All Styles</span>
   `;
     optionsContainer.appendChild(allOption);
@@ -837,7 +854,31 @@ function openFavoritsPage() {
     products.style.display = 'none';
     productDetails.style.display = 'none';
     dataContainerInFavorites.style.display = 'grid';
-    fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1');
+    let newValue = 1;
+    switch (selectedCategory) {
+        case 'animated': {
+            fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=1');
+            newValue = 1;
+            break;
+        }
+        case 'animated icons': {
+            fetchAnimatedFavoriteData('https://creattie.com/api/favourites?category=3');
+            newValue = 3;
+            break;
+        }
+        case 'illustrations': {
+            fetchDataForFavorites('https://creattie.com/api/favourites?category=2');
+            newValue = 2;
+            break;
+        }
+        case 'icons': {
+            newValue = 4;
+            fetchDataForFavorites('https://creattie.com/api/favourites?category=4');
+        }
+    }
+    const selectElement = document.getElementById("assetsOfFavorites");
+    selectElement.value = newValue;
+    selectElement.dispatchEvent(new Event("change"));
 }
 function extractLayersAndColors(data) {
     const extractedData = [];

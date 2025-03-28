@@ -49,7 +49,7 @@
             <div id="info">
               <a href="https://creattie.com/profile/settings" target="_blank">Profile</a>
               <a href="#" onclick="openFavoritsPage()">Favorites</a>
-              <a href="https://creattie.com/contact">Help</a>
+              <a href="https://creattie.com/contact" target="_blank">Help</a>
               <a href="#" id="logout">Sign out</a>
             </div>
           </div>
@@ -151,7 +151,7 @@
 
       <div class="favorites-wrapper" id="favorites">
           <div class="button-wrapper">
-              <button onclick="goBack()">Back</button>
+              <button onclick="goBackFromFavorites()"> <i class="fa-solid fa-chevron-left"> </i>Back</button>
           </div>
           <select id="assetsOfFavorites" name="assets" class="favorites-select" onchange="handleSelectionChangeInMain()">
               <option value="1" selected style="'font-family: Carter One, system-ui;'">Animated illustrations</option>
