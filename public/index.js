@@ -726,7 +726,7 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
                                 "name": `${selectedItem.nm}`,
                                 "namespace": "",
                                 "comb": "",
-                                "styleLess": "width: 250px; height: 250px;",
+                                "styleLess": "width: auto; height: auto;",
                                 "variants": {},
                                 "children": [],
                                 "origin": null,
@@ -769,8 +769,8 @@ const addAsset = () => __awaiter(this, void 0, void 0, function* () {
                 yield labelElement.setTag('img');
                 yield labelElement.setAttribute('class', svgName);
                 yield labelElement.setAttribute('src', url);
-                yield labelElement.setAttribute('width', '250px');
-                yield labelElement.setAttribute('height', '250px');
+                // await labelElement.setAttribute('width', '250px');
+                // await labelElement.setAttribute('height', '250px');
             }
             catch (error) {
                 console.error("Error loading illustration:", error);

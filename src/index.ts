@@ -798,7 +798,7 @@ const addAsset = async () => {
                     "name": `${selectedItem.nm}`,
                     "namespace": "",
                     "comb": "",
-                    "styleLess": "width: 250px; height: 250px;",
+                    "styleLess": "width: auto; height: auto;",
                     "variants": {},
                     "children": [],
                     "origin": null,
@@ -844,8 +844,8 @@ const addAsset = async () => {
           await labelElement.setTag('img');
           await labelElement.setAttribute('class', svgName);
           await labelElement.setAttribute('src', url);
-          await labelElement.setAttribute('width', '250px');
-          await labelElement.setAttribute('height', '250px');
+          // await labelElement.setAttribute('width', '250px');
+          // await labelElement.setAttribute('height', '250px');
 
         } catch (error) {
           console.error("Error loading illustration:", error);
